@@ -1,9 +1,10 @@
 ## Truffle
 
-truffle compile
-truffle migrate
+<code>truffle compile</code>
+
+<code>truffle migrate</code>
 
 ## React
 
-npm install
-npm start
+<code>npm install</code>
+<code>npm start</code>
