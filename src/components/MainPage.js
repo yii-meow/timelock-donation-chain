@@ -13,6 +13,12 @@ const MainPage = () => {
     const [provider, setProvider] = useState(null);
     const [signer, setSigner] = useState(null);
     const [userAuthContract, setUserAuthContract] = useState(null);
+    const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+    const [registrationData, setRegistrationData] = useState({
+        name: '',
+        email: '',
+        // Add any other fields you want to collect
+    });
 
     useEffect(() => {
         checkIfWalletIsConnected();
@@ -68,24 +74,41 @@ const MainPage = () => {
         }
     };
 
-    const handleRegister = async () => {
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setRegistrationData(prevData => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
         if (!userAuthContract) {
             console.error("UserAuth contract is not initialized");
             return;
         }
 
         try {
-            // You might want to get these values from input fields
-            const name = "John Doe";
-            const email = "john@example.com";
-
-            const tx = await userAuthContract.register(name, email);
-            await tx.wait();
+            console.log("Attempting to register with:", registrationData);
+            const tx = await userAuthContract.register(registrationData.name, registrationData.email);
+            console.log("Transaction sent:", tx.hash);
+            const receipt = await tx.wait();
+            console.log("Transaction confirmed:", receipt.transactionHash);
 
             console.log("Registration successful!");
             setIsRegistered(true);
+            setShowRegistrationForm(false);
         } catch (error) {
             console.error("An error occurred during registration:", error);
+            if (error.error && error.error.message) {
+                console.error("Contract error message:", error.error.message);
+            }
+            if (error.transaction) {
+                console.error("Failed transaction:", error.transaction);
+            }
+            // Display error to user
+            alert(`Registration failed: ${error.message}`);
         }
     };
 
@@ -115,7 +138,7 @@ const MainPage = () => {
                                     ))}
                                 </select>
                             ) : !isRegistered ? (
-                                <button onClick={handleRegister} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
+                                <button onClick={() => setShowRegistrationForm(true)} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
                                     Register
                                 </button>
                             ) : (
@@ -151,6 +174,47 @@ const MainPage = () => {
                         <p className="text-yellow-600">Please connect your wallet to get started.</p>
                     )}
                 </div>
+
+                {showRegistrationForm && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
+                        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                            <div className="mt-3 text-center">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Register</h3>
+                                <form onSubmit={handleRegister} className="mt-2 px-7 py-3">
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={registrationData.name}
+                                        onChange={handleInputChange}
+                                        placeholder="Name"
+                                        className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                        required
+                                    />
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={registrationData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="Email"
+                                        className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                        required
+                                    />
+                                    <div className="items-center px-4 py-3">
+                                        <button
+                                            type="submit"
+                                            className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        >
+                                            Register
+                                        </button>
+                                    </div>
+                                </form>
+                                <button onClick={() => setShowRegistrationForm(false)} className="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
