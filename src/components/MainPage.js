@@ -9,54 +9,62 @@ const MainPage = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [address, setAddress] = useState('');
+    const [availableAddresses, setAvailableAddresses] = useState([]);
     const [provider, setProvider] = useState(null);
     const [signer, setSigner] = useState(null);
     const [userAuthContract, setUserAuthContract] = useState(null);
 
     useEffect(() => {
-        checkConnection();
+        checkIfWalletIsConnected();
     }, []);
 
-    const checkConnection = async () => {
+    const checkIfWalletIsConnected = async () => {
         if (window.ethereum) {
             try {
-                const provider = new ethers.BrowserProvider(window.ethereum);
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                setProvider(provider);
+
                 const accounts = await provider.listAccounts();
-
                 if (accounts.length > 0) {
-                    const signer = provider.getSigner();
-                    const address = await signer.getAddress();
-                    const userAuthContract = new ethers.Contract(USER_AUTH_ADDRESS, USER_AUTH_ABI, signer);
-
+                    setAvailableAddresses(accounts);
                     setIsConnected(true);
-                    setAddress(address);
-                    setProvider(provider);
-                    setSigner(signer);
-                    setUserAuthContract(userAuthContract);
-
-                    // Check if user is registered
-                    const registered = await userAuthContract.isUserRegistered(address);
-                    setIsRegistered(registered);
                 }
             } catch (error) {
-                console.error("An error occurred while checking the connection:", error);
+                console.error("An error occurred while checking the wallet connection:", error);
             }
         } else {
-            console.log("Please install MetaMask!");
+            console.log('Please install MetaMask!');
         }
     };
 
-    const handleConnect = async () => {
-        console.log("hell");
+    const connectWallet = async () => {
         if (window.ethereum) {
             try {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                await checkConnection();
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                setAvailableAddresses(accounts);
+                setIsConnected(true);
             } catch (error) {
                 console.error("User denied account access");
             }
         } else {
-            console.log("Please install MetaMask!");
+            alert('Please install MetaMask!');
+        }
+    };
+
+    const selectAddress = async (selectedAddress) => {
+        try {
+            const signer = provider.getSigner(selectedAddress);
+            const userAuthContract = new ethers.Contract(USER_AUTH_ADDRESS, USER_AUTH_ABI, signer);
+
+            setAddress(selectedAddress);
+            setSigner(signer);
+            setUserAuthContract(userAuthContract);
+
+            // Check if user is registered
+            const registered = await userAuthContract.isUserRegistered(selectedAddress);
+            setIsRegistered(registered);
+        } catch (error) {
+            console.error("An error occurred while selecting the address:", error);
         }
     };
 
@@ -94,9 +102,18 @@ const MainPage = () => {
                         <div className="text-xl font-bold">TimeLock dApp</div>
                         <div>
                             {!isConnected ? (
-                                <button onClick={handleConnect} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
+                                <button onClick={connectWallet} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
                                     Connect Wallet
                                 </button>
+                            ) : !address ? (
+                                <select onChange={(e) => selectAddress(e.target.value)} className="bg-white text-indigo-600 font-semibold py-2 px-4 rounded">
+                                    <option value="">Select Address</option>
+                                    {availableAddresses.map((addr) => (
+                                        <option key={addr} value={addr}>
+                                            {addr}
+                                        </option>
+                                    ))}
+                                </select>
                             ) : !isRegistered ? (
                                 <button onClick={handleRegister} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
                                     Register
@@ -119,12 +136,16 @@ const MainPage = () => {
                     </p>
                     {isConnected ? (
                         <div>
-                            <p className="font-semibold">Connected Address: {address}</p>
+                            {address ? (
+                                <p className="font-semibold">Connected Address: {address}</p>
+                            ) : (
+                                <p className="text-yellow-600">Please select an address to continue.</p>
+                            )}
                             {isRegistered ? (
                                 <p className="mt-2 text-green-600">You're registered and ready to use the dApp!</p>
-                            ) : (
+                            ) : address ? (
                                 <p className="mt-2 text-yellow-600">Please register to start using the dApp.</p>
-                            )}
+                            ) : null}
                         </div>
                     ) : (
                         <p className="text-yellow-600">Please connect your wallet to get started.</p>
