@@ -52,12 +52,4 @@ contract UserAuth {
     function isUserRegistered(address userAddress) public view returns (bool) {
         return users[userAddress].exists;
     }
-
-    function updateUserDetails(
-        string memory _name,
-        string memory _email
-    ) public onlyRegistered {
-        users[msg.sender].name = _name;
-        users[msg.sender].email = _email;
-    }
 }

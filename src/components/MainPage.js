@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { USER_AUTH_ABI } from '../abis/UserAuth';
+import Dashboard from './Dashboard';
 
-// Address of your deployed UserAuth contract
-const USER_AUTH_ADDRESS = "0x0D9E598F452E903De4051A64B0aA302028825E43";
+const USER_AUTH_ADDRESS = process.env.REACT_APP_USER_AUTH_ADDRESS;
 
 const MainPage = () => {
     const [isConnected, setIsConnected] = useState(false);
@@ -19,6 +19,8 @@ const MainPage = () => {
         email: '',
         // Add any other fields you want to collect
     });
+    const [showDashboard, setShowDashboard] = useState(false);
+    const [registrationStatus, setRegistrationStatus] = useState('');
 
     useEffect(() => {
         checkIfWalletIsConnected();
@@ -30,10 +32,16 @@ const MainPage = () => {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 setProvider(provider);
 
-                const accounts = await provider.listAccounts();
-                if (accounts.length > 0) {
-                    setAvailableAddresses(accounts);
-                    setIsConnected(true);
+                // Check if we have a stored address
+                const storedAddress = localStorage.getItem('connectedAddress');
+
+                if (storedAddress) {
+                    await connectToAddress(provider, storedAddress);
+                } else {
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        await connectToAddress(provider, accounts[0]);
+                    }
                 }
             } catch (error) {
                 console.error("An error occurred while checking the wallet connection:", error);
@@ -43,12 +51,36 @@ const MainPage = () => {
         }
     };
 
+    const connectToAddress = async (provider, addressToConnect) => {
+        try {
+            const signer = provider.getSigner(addressToConnect);
+            const userAuthContract = new ethers.Contract(USER_AUTH_ADDRESS, USER_AUTH_ABI, signer);
+
+            setAddress(addressToConnect);
+            setSigner(signer);
+            setUserAuthContract(userAuthContract);
+            setIsConnected(true);
+
+            // Store the connected address
+            localStorage.setItem('connectedAddress', addressToConnect);
+
+            // Check if user is registered
+            const registered = await userAuthContract.isUserRegistered(addressToConnect);
+            setIsRegistered(registered);
+
+            // Update available addresses
+            const accounts = await provider.listAccounts();
+            setAvailableAddresses(accounts);
+        } catch (error) {
+            console.error("An error occurred while connecting to the address:", error);
+        }
+    };
+
     const connectWallet = async () => {
         if (window.ethereum) {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                setAvailableAddresses(accounts);
-                setIsConnected(true);
+                await connectToAddress(provider, accounts[0]);
             } catch (error) {
                 console.error("User denied account access");
             }
@@ -58,20 +90,7 @@ const MainPage = () => {
     };
 
     const selectAddress = async (selectedAddress) => {
-        try {
-            const signer = provider.getSigner(selectedAddress);
-            const userAuthContract = new ethers.Contract(USER_AUTH_ADDRESS, USER_AUTH_ABI, signer);
-
-            setAddress(selectedAddress);
-            setSigner(signer);
-            setUserAuthContract(userAuthContract);
-
-            // Check if user is registered
-            const registered = await userAuthContract.isUserRegistered(selectedAddress);
-            setIsRegistered(registered);
-        } catch (error) {
-            console.error("An error occurred while selecting the address:", error);
-        }
+        await connectToAddress(provider, selectedAddress);
     };
 
     const handleInputChange = (e) => {
@@ -86,36 +105,54 @@ const MainPage = () => {
         e.preventDefault();
         if (!userAuthContract) {
             console.error("UserAuth contract is not initialized");
+            setRegistrationStatus("Contract not initialized. Please try reconnecting your wallet.");
             return;
         }
 
         try {
-            console.log("Attempting to register with:", registrationData);
+            setRegistrationStatus('Sending transaction...');
             const tx = await userAuthContract.register(registrationData.name, registrationData.email);
-            console.log("Transaction sent:", tx.hash);
-            const receipt = await tx.wait();
-            console.log("Transaction confirmed:", receipt.transactionHash);
 
-            console.log("Registration successful!");
-            setIsRegistered(true);
-            setShowRegistrationForm(false);
+            setRegistrationStatus('Transaction sent. Waiting for confirmation...');
+
+            const receipt = await tx.wait();
+            console.log("Transaction receipt:", receipt);
+
+            setRegistrationStatus('Transaction confirmed. Verifying registration...');
+
+            const isRegistered = await userAuthContract.isUserRegistered(address);
+
+            if (isRegistered) {
+                setRegistrationStatus('Registration successful!');
+                setIsRegistered(true);
+                setShowRegistrationForm(false);
+                setShowDashboard(true);
+            } else {
+                setRegistrationStatus('Registration failed. Please try again.');
+            }
         } catch (error) {
             console.error("An error occurred during registration:", error);
-            if (error.error && error.error.message) {
-                console.error("Contract error message:", error.error.message);
-            }
-            if (error.transaction) {
-                console.error("Failed transaction:", error.transaction);
-            }
-            // Display error to user
-            alert(`Registration failed: ${error.message}`);
+            setRegistrationStatus(`Registration failed: ${error.message}`);
         }
     };
 
-    const handleLogin = () => {
-        // In this case, "login" is just checking if the user is registered
-        console.log("User is already logged in (registered)");
+    const disconnectWallet = () => {
+        setIsConnected(false);
+        setIsRegistered(false);
+        setAddress('');
+        setProvider(null);
+        setSigner(null);
+        setUserAuthContract(null);
+        setShowDashboard(false);
     };
+
+    if (showDashboard) {
+        return <Dashboard
+            address={address}
+            userAuthContract={userAuthContract}
+            onDisconnect={disconnectWallet}
+        />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -128,23 +165,29 @@ const MainPage = () => {
                                 <button onClick={connectWallet} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
                                     Connect Wallet
                                 </button>
-                            ) : !address ? (
-                                <select onChange={(e) => selectAddress(e.target.value)} className="bg-white text-indigo-600 font-semibold py-2 px-4 rounded">
-                                    <option value="">Select Address</option>
-                                    {availableAddresses.map((addr) => (
-                                        <option key={addr} value={addr}>
-                                            {addr}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : !isRegistered ? (
-                                <button onClick={() => setShowRegistrationForm(true)} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
-                                    Register
-                                </button>
                             ) : (
-                                <button onClick={handleLogin} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
-                                    Login
-                                </button>
+                                <div className="flex items-center">
+                                    <select
+                                        value={address}
+                                        onChange={(e) => selectAddress(e.target.value)}
+                                        className="bg-white text-indigo-600 font-semibold py-2 px-4 rounded mr-2"
+                                    >
+                                        {availableAddresses.map((addr) => (
+                                            <option key={addr} value={addr}>
+                                                {addr}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {!isRegistered ? (
+                                        <button onClick={() => setShowRegistrationForm(true)} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
+                                            Register
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => setShowDashboard(true)} className="bg-transparent hover:bg-indigo-700 text-white font-semibold py-2 px-4 border border-white rounded">
+                                            Dashboard
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -208,6 +251,9 @@ const MainPage = () => {
                                         </button>
                                     </div>
                                 </form>
+                                {registrationStatus && (
+                                    <p className="mt-4 text-sm text-gray-600">{registrationStatus}</p>
+                                )}
                                 <button onClick={() => setShowRegistrationForm(false)} className="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
                                     Close
                                 </button>
