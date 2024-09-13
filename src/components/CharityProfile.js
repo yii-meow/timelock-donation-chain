@@ -22,8 +22,6 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setError('');
         try {
             const details = await authManagerContract.getCharityDetails(address);
-            console.log(authManagerContract)
-            console.log(details)
             // const totalDonations = await authManagerContract.getCharityTotalDonations(address);
 
             setCharityDetails({
@@ -35,13 +33,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
                 // totalDonationsReceived: totalDonations
             });
         } catch (error) {
-            if (error.reason) {
-                setError(`Failed to load charity details: ${error.reason}`);
-            } else if (error.data && error.data.message) {
-                setError(`Failed to load charity details: ${error.data.message}`);
-            } else {
-                setError("Failed to load charity details. Please try again later.");
-            }
+            setError(`Failed to load charity details: ${error}`);
         } finally {
             setIsLoading(false);
         }
@@ -78,7 +70,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
             </div>
             <div className="mb-4">
                 <p className="text-gray-600">Total Donations Received:</p>
-                <p className="font-bold">{ethers.utils.formatEther(charityDetails.totalDonationsReceived)} ETH</p>
+                {/* <p className="font-bold">{ethers.utils.formatEther(charityDetails.totalDonationsReceived)} ETH</p> */}
             </div>
             {charityDetails.isApproved && (
                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
