@@ -11,5 +11,4 @@
 
 ## Edit env file
 
-Put your contract address as in .env
-as REACT_APP_USER_AUTH_ADDRESS
+Put your contract address as REACT_APP_AUTH_MANAGER_ADDRESS, saved it as .env and place at root
