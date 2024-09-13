@@ -34,17 +34,14 @@ const MainPage = () => {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 setProvider(provider);
                 const accounts = await provider.listAccounts();
-                console.log("Accounts found:", accounts);
                 if (accounts.length > 0) {
                     setAvailableAddresses(accounts);
                     await selectAddress(accounts[0]);
                 }
             } catch (error) {
-                console.error("An error occurred while checking the wallet connection:", error);
                 setError("Failed to connect to the wallet. Please try again.");
             }
         } else {
-            console.log("Please install MetaMask!");
             setError("Please install MetaMask to use this application.");
         }
     };

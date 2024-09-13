@@ -114,10 +114,11 @@ contract AuthManager {
         return (user.name, user.email, user.registrationDate);
     }
 
-    function getCharityDetails()
+    function getCharityDetails(
+        address _charityAddress
+    )
         public
         view
-        onlyRegisteredCharity
         returns (
             string memory name,
             string memory description,
@@ -126,7 +127,8 @@ contract AuthManager {
             bool isApproved
         )
     {
-        CharityDetails memory charity = charities[msg.sender];
+        require(charities[_charityAddress].exists, "Charity does not exist");
+        CharityDetails memory charity = charities[_charityAddress];
         return (
             charity.name,
             charity.description,

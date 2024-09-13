@@ -145,7 +145,13 @@ export const AUTH_MANAGER_ABI = [
         "type": "function"
     },
     {
-        "inputs": [],
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_charityAddress",
+                "type": "address"
+            }
+        ],
         "name": "getCharityDetails",
         "outputs": [
             {
