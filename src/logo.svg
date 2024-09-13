@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#4299E1" />
+  
+  <!-- Blockchain representation -->
+  <rect x="70" y="70" width="20" height="20" fill="white" />
+  <rect x="95" y="70" width="20" height="20" fill="white" />
+  <rect x="120" y="70" width="20" height="20" fill="white" />
+  <rect x="70" y="95" width="20" height="20" fill="white" />
+  <rect x="95" y="95" width="20" height="20" fill="white" />
+  <rect x="120" y="95" width="20" height="20" fill="white" />
+  
+  <!-- Heart shape for donation -->
+  <path d="M100 140 C60 100 140 60 100 120" fill="#EF4444" />
+  <path d="M100 140 C140 100 60 60 100 120" fill="#EF4444" />
+</svg>

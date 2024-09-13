@@ -1,5 +1,5 @@
-var Animals = artifacts.require("./UserAuth.sol");
+var AuthManager = artifacts.require("./AuthManager.sol");
 
 module.exports = function (deployer) {
-  deployer.deploy(Animals);
+  deployer.deploy(AuthManager);
 };
