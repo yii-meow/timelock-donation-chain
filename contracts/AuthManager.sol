@@ -7,6 +7,7 @@ contract AuthManager {
         string email;
         uint256 registrationDate;
         bool exists;
+        bool isActive;
     }
 
     struct CharityDetails {
@@ -16,6 +17,7 @@ contract AuthManager {
         uint256 registrationDate;
         bool exists;
         bool isApproved;
+        bool isActive;
     }
 
     mapping(address => UserDetails) private users;
@@ -33,6 +35,16 @@ contract AuthManager {
         string description
     );
     event CharityApproved(address indexed charityAddress);
+    event UserUpdated(address indexed userAddress, string name, string email);
+    event CharityUpdated(
+        address indexed charityAddress,
+        string name,
+        string description
+    );
+    event UserDeactivated(address indexed userAddress);
+    event CharityDeactivated(address indexed charityAddress);
+    event UserReactivated(address indexed userAddress);
+    event CharityReactivated(address indexed charityAddress);
 
     constructor() {
         admin = msg.sender;
@@ -53,6 +65,16 @@ contract AuthManager {
         _;
     }
 
+    modifier onlyActiveUser() {
+        require(users[msg.sender].isActive, "User is not active");
+        _;
+    }
+
+    modifier onlyActiveCharity() {
+        require(charities[msg.sender].isActive, "Charity is not active");
+        _;
+    }
+
     function registerAsUser(string memory _name, string memory _email) public {
         require(!users[msg.sender].exists, "User already registered!");
         require(
@@ -64,7 +86,8 @@ contract AuthManager {
             name: _name,
             email: _email,
             registrationDate: block.timestamp,
-            exists: true
+            exists: true,
+            isActive: true
         });
 
         emit UserRegistered(msg.sender, _name, _email);
@@ -83,22 +106,65 @@ contract AuthManager {
             walletAddress: _walletAddress,
             registrationDate: block.timestamp,
             exists: true,
-            isApproved: false
+            isApproved: false,
+            isActive: true
         });
 
         emit CharityRegistered(msg.sender, _name, _description);
     }
 
-    // function approveCharity(address _charityAddress) public onlyAdmin {
-    //     require(charities[_charityAddress].exists, "Charity not registered");
-    //     require(
-    //         !charities[_charityAddress].isApproved,
-    //         "Charity already approved"
-    //     );
+    function updateUserDetails(
+        string memory _name,
+        string memory _email
+    ) public onlyRegisteredUser onlyActiveUser {
+        UserDetails storage user = users[msg.sender];
+        user.name = _name;
+        user.email = _email;
 
-    //     charities[_charityAddress].isApproved = true;
-    //     emit CharityApproved(_charityAddress);
-    // }
+        emit UserUpdated(msg.sender, _name, _email);
+    }
+
+    function updateCharityDetails(
+        string memory _name,
+        string memory _description
+    ) public onlyRegisteredCharity onlyActiveCharity {
+        CharityDetails storage charity = charities[msg.sender];
+        charity.name = _name;
+        charity.description = _description;
+
+        emit CharityUpdated(msg.sender, _name, _description);
+    }
+
+    function deactivateUser() public onlyRegisteredUser {
+        users[msg.sender].isActive = false;
+        emit UserDeactivated(msg.sender);
+    }
+
+    function deactivateCharity() public onlyRegisteredCharity {
+        charities[msg.sender].isActive = false;
+        emit CharityDeactivated(msg.sender);
+    }
+
+    function reactivateUser() public onlyRegisteredUser {
+        users[msg.sender].isActive = true;
+        emit UserReactivated(msg.sender);
+    }
+
+    function reactivateCharity() public onlyRegisteredCharity {
+        charities[msg.sender].isActive = true;
+        emit CharityReactivated(msg.sender);
+    }
+
+    function approveCharity(address _charityAddress) public onlyAdmin {
+        require(charities[_charityAddress].exists, "Charity not registered");
+        require(
+            !charities[_charityAddress].isApproved,
+            "Charity already approved"
+        );
+
+        charities[_charityAddress].isApproved = true;
+        emit CharityApproved(_charityAddress);
+    }
 
     function getUserDetails()
         public
@@ -107,11 +173,12 @@ contract AuthManager {
         returns (
             string memory name,
             string memory email,
-            uint256 registrationDate
+            uint256 registrationDate,
+            bool isActive
         )
     {
         UserDetails memory user = users[msg.sender];
-        return (user.name, user.email, user.registrationDate);
+        return (user.name, user.email, user.registrationDate, user.isActive);
     }
 
     function getCharityDetails(
@@ -124,7 +191,8 @@ contract AuthManager {
             string memory description,
             address walletAddress,
             uint256 registrationDate,
-            bool isApproved
+            bool isApproved,
+            bool isActive
         )
     {
         require(charities[_charityAddress].exists, "Charity does not exist");
@@ -134,7 +202,8 @@ contract AuthManager {
             charity.description,
             charity.walletAddress,
             charity.registrationDate,
-            charity.isApproved
+            charity.isApproved,
+            charity.isActive
         );
     }
 
