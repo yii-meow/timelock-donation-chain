@@ -18,11 +18,24 @@ contract AuthManager {
         bool exists;
         bool isApproved;
         bool isActive;
+        uint8 category;
+        string[] tags;
     }
 
     mapping(address => UserDetails) private users;
     mapping(address => CharityDetails) private charities;
     address public admin;
+
+    string[] public categories = [
+        "Education",
+        "Healthcare",
+        "Environment",
+        "Poverty",
+        "Disaster Relief",
+        "Arts and Culture",
+        "Animal Welfare",
+        "Human Rights"
+    ];
 
     event UserRegistered(
         address indexed userAddress,
@@ -32,14 +45,18 @@ contract AuthManager {
     event CharityRegistered(
         address indexed charityAddress,
         string name,
-        string description
+        string description,
+        uint8 category,
+        string[] tags
     );
     event CharityApproved(address indexed charityAddress);
     event UserUpdated(address indexed userAddress, string name, string email);
     event CharityUpdated(
         address indexed charityAddress,
         string name,
-        string description
+        string description,
+        uint8 category,
+        string[] tags
     );
     event UserDeactivated(address indexed userAddress);
     event CharityDeactivated(address indexed charityAddress);
@@ -96,9 +113,12 @@ contract AuthManager {
     function registerAsCharity(
         string memory _name,
         string memory _description,
-        address payable _walletAddress
+        address payable _walletAddress,
+        uint8 _category,
+        string[] memory _tags
     ) public {
         require(!charities[msg.sender].exists, "Charity already registered");
+        require(_category < categories.length, "Invalid category");
 
         charities[msg.sender] = CharityDetails({
             name: _name,
@@ -107,10 +127,18 @@ contract AuthManager {
             registrationDate: block.timestamp,
             exists: true,
             isApproved: false,
-            isActive: true
+            isActive: true,
+            category: _category,
+            tags: _tags
         });
 
-        emit CharityRegistered(msg.sender, _name, _description);
+        emit CharityRegistered(
+            msg.sender,
+            _name,
+            _description,
+            _category,
+            _tags
+        );
     }
 
     function updateUserDetails(
@@ -126,13 +154,19 @@ contract AuthManager {
 
     function updateCharityDetails(
         string memory _name,
-        string memory _description
+        string memory _description,
+        uint8 _category,
+        string[] memory _tags
     ) public onlyRegisteredCharity onlyActiveCharity {
+        require(_category < categories.length, "Invalid category");
+
         CharityDetails storage charity = charities[msg.sender];
         charity.name = _name;
         charity.description = _description;
+        charity.category = _category;
+        charity.tags = _tags;
 
-        emit CharityUpdated(msg.sender, _name, _description);
+        emit CharityUpdated(msg.sender, _name, _description, _category, _tags);
     }
 
     function deactivateUser() public onlyRegisteredUser {
@@ -192,7 +226,9 @@ contract AuthManager {
             address walletAddress,
             uint256 registrationDate,
             bool isApproved,
-            bool isActive
+            bool isActive,
+            uint8 category,
+            string[] memory tags
         )
     {
         require(charities[_charityAddress].exists, "Charity does not exist");
@@ -203,8 +239,21 @@ contract AuthManager {
             charity.walletAddress,
             charity.registrationDate,
             charity.isApproved,
-            charity.isActive
+            charity.isActive,
+            charity.category,
+            charity.tags
         );
+    }
+
+    function getCategoryName(
+        uint8 _categoryId
+    ) public view returns (string memory) {
+        require(_categoryId < categories.length, "Invalid category ID");
+        return categories[_categoryId];
+    }
+
+    function getCategoryCount() public view returns (uint256) {
+        return categories.length;
     }
 
     function isUserRegistered(address userAddress) public view returns (bool) {

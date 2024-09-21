@@ -24,9 +24,34 @@ const MainPage = () => {
     const [error, setError] = useState('');
     const [provider, setProvider] = useState(null);
 
+
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(0);
+    const [tags, setTags] = useState('');
+
     useEffect(() => {
         checkIfWalletIsConnected();
     }, []);
+
+    useEffect(() => {
+        if (authManagerContract) {
+            fetchCategories();
+        }
+    }, [authManagerContract]);
+
+    const fetchCategories = async () => {
+        try {
+            const categoryCount = await authManagerContract.getCategoryCount();
+            const fetchedCategories = [];
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await authManagerContract.getCategoryName(i);
+                fetchedCategories.push(categoryName);
+            }
+            setCategories(fetchedCategories);
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
+        }
+    };
 
     const checkIfWalletIsConnected = async () => {
         if (typeof window.ethereum !== 'undefined') {
@@ -85,10 +110,16 @@ const MainPage = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setRegistrationData(prevData => ({
-            ...prevData,
-            [name]: value
-        }));
+        if (name === 'category') {
+            setSelectedCategory(parseInt(value));
+        } else if (name === 'tags') {
+            setTags(value);
+        } else {
+            setRegistrationData(prevData => ({
+                ...prevData,
+                [name]: value
+            }));
+        }
     };
 
     const handleRegister = async (e) => {
@@ -102,9 +133,15 @@ const MainPage = () => {
             let tx;
             if (registrationType === 'user') {
                 tx = await authManagerContract.registerAsUser(registrationData.name, registrationData.email);
-                console.log(tx);
             } else if (registrationType === 'charity') {
-                tx = await authManagerContract.registerAsCharity(registrationData.name, registrationData.description, address);
+                const tagArray = tags.split(',').map(tag => tag.trim());
+                tx = await authManagerContract.registerAsCharity(
+                    registrationData.name,
+                    registrationData.description,
+                    address,
+                    selectedCategory,
+                    tagArray
+                );
             }
 
             await tx.wait();
@@ -224,14 +261,27 @@ const MainPage = () => {
                                     />
                                 )}
                                 {registrationType === 'charity' && (
-                                    <textarea
-                                        name="description"
-                                        value={registrationData.description}
-                                        onChange={handleInputChange}
-                                        placeholder="Charity Description"
-                                        className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
-                                        required
-                                    />
+                                    <>
+                                        <select
+                                            name="category"
+                                            value={selectedCategory}
+                                            onChange={handleInputChange}
+                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                            required
+                                        >
+                                            {categories.map((category, index) => (
+                                                <option key={index} value={index}>{category}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="text"
+                                            name="tags"
+                                            value={tags}
+                                            onChange={handleInputChange}
+                                            placeholder="Tags (comma-separated)"
+                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                        />
+                                    </>
                                 )}
                                 <div className="mt-4">
                                     <button

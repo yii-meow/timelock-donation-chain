@@ -63,6 +63,18 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "string",
                 "name": "description",
                 "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "category",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "string[]",
+                "name": "tags",
+                "type": "string[]"
             }
         ],
         "name": "CharityRegistered",
@@ -88,6 +100,18 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "string",
                 "name": "description",
                 "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "category",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "string[]",
+                "name": "tags",
+                "type": "string[]"
             }
         ],
         "name": "CharityUpdated",
@@ -185,6 +209,25 @@ export const AUTH_MANAGER_ABI = [
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "categories",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "string",
                 "name": "_name",
                 "type": "string"
@@ -216,6 +259,16 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "address payable",
                 "name": "_walletAddress",
                 "type": "address"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_category",
+                "type": "uint8"
+            },
+            {
+                "internalType": "string[]",
+                "name": "_tags",
+                "type": "string[]"
             }
         ],
         "name": "registerAsCharity",
@@ -252,6 +305,16 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "string",
                 "name": "_description",
                 "type": "string"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_category",
+                "type": "uint8"
+            },
+            {
+                "internalType": "string[]",
+                "name": "_tags",
+                "type": "string[]"
             }
         ],
         "name": "updateCharityDetails",
@@ -367,6 +430,48 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "bool",
                 "name": "isActive",
                 "type": "bool"
+            },
+            {
+                "internalType": "uint8",
+                "name": "category",
+                "type": "uint8"
+            },
+            {
+                "internalType": "string[]",
+                "name": "tags",
+                "type": "string[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "_categoryId",
+                "type": "uint8"
+            }
+        ],
+        "name": "getCategoryName",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getCategoryCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",

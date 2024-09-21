@@ -36,7 +36,7 @@ contract("AuthManager", (accounts) => {
 
     describe("Charity Registration", () => {
         it("should allow a charity to register", async () => {
-            const result = await authManager.registerAsCharity("Charity A", "Description A", charity1, { from: charity1 });
+            const result = await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1", "tag2"], { from: charity1 });
 
             expectEvent(result, 'CharityRegistered', {
                 charityAddress: charity1,
@@ -48,13 +48,15 @@ contract("AuthManager", (accounts) => {
             assert.equal(charityDetails.name, "Charity A");
             assert.equal(charityDetails.description, "Description A");
             assert.equal(charityDetails.walletAddress, charity1);
+            assert.equal(charityDetails.category.toNumber(), 0);
+            assert.deepEqual(charityDetails.tags, ["tag1", "tag2"]);
         });
 
         it("should not allow a charity to register twice", async () => {
-            await authManager.registerAsCharity("Charity A", "Description A", charity1, { from: charity1 });
+            await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1"], { from: charity1 });
 
             await expectRevert(
-                authManager.registerAsCharity("Charity A", "Description A", charity1, { from: charity1 }),
+                authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1"], { from: charity1 }),
                 "Charity already registered"
             );
         });
@@ -72,7 +74,7 @@ contract("AuthManager", (accounts) => {
         it("should correctly report charity registration status", async () => {
             assert.isFalse(await authManager.isCharityRegistered(charity1));
 
-            await authManager.registerAsCharity("Charity A", "Description A", charity1, { from: charity1 });
+            await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1"], { from: charity1 });
 
             assert.isTrue(await authManager.isCharityRegistered(charity1));
         });
@@ -132,11 +134,11 @@ contract("AuthManager", (accounts) => {
 
     describe("Charity Update and Deactivation", () => {
         beforeEach(async () => {
-            await authManager.registerAsCharity("Charity A", "Description A", charity1, { from: charity1 });
+            await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1", "tag2"], { from: charity1 });
         });
 
         it("should allow a charity to update their details", async () => {
-            const result = await authManager.updateCharityDetails("Charity A Updated", "Description A Updated", { from: charity1 });
+            const result = await authManager.updateCharityDetails("Charity A Updated", "Description A Updated", 1, ["tag3", "tag4"], { from: charity1 });
 
             expectEvent(result, 'CharityUpdated', {
                 charityAddress: charity1,
@@ -147,6 +149,8 @@ contract("AuthManager", (accounts) => {
             const charityDetails = await authManager.getCharityDetails(charity1);
             assert.equal(charityDetails.name, "Charity A Updated");
             assert.equal(charityDetails.description, "Description A Updated");
+            assert.equal(charityDetails.category.toNumber(), 1);
+            assert.deepEqual(charityDetails.tags, ["tag3", "tag4"]);
         });
 
         it("should allow a charity to deactivate their account", async () => {
@@ -176,8 +180,88 @@ contract("AuthManager", (accounts) => {
             await authManager.deactivateCharity({ from: charity1 });
 
             await expectRevert(
-                authManager.updateCharityDetails("Charity A Updated", "Description A Updated", { from: charity1 }),
+                authManager.updateCharityDetails("Charity A Updated", "Description A Updated", 1, ["tag3", "tag4"], { from: charity1 }),
                 "Charity is not active"
+            );
+        });
+    });
+
+    describe("Charity Categories", () => {
+        it("should return the correct number of categories", async () => {
+            const categoryCount = await authManager.getCategoryCount();
+            assert.isTrue(categoryCount.toNumber() > 0, "Category count should be greater than zero");
+        });
+
+        it("should return valid category names", async () => {
+            const categoryCount = await authManager.getCategoryCount();
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await authManager.getCategoryName(i);
+                assert.isTrue(categoryName.length > 0, `Category name at index ${i} should not be empty`);
+            }
+        });
+
+        it("should revert when requesting an invalid category ID", async () => {
+            const categoryCount = await authManager.getCategoryCount();
+            await expectRevert(
+                authManager.getCategoryName(categoryCount.toNumber()),
+                "Invalid category ID"
+            );
+        });
+    });
+
+    describe("Charity Registration with Category and Tags", () => {
+        it("should allow a charity to register with a category and tags", async () => {
+            const result = await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1", "tag2"], { from: charity1 });
+
+            expectEvent(result, 'CharityRegistered', {
+                charityAddress: charity1,
+                name: "Charity A",
+                description: "Description A"
+            });
+
+            const charityDetails = await authManager.getCharityDetails(charity1);
+            assert.equal(charityDetails.name, "Charity A");
+            assert.equal(charityDetails.description, "Description A");
+            assert.equal(charityDetails.walletAddress, charity1);
+            assert.equal(charityDetails.category.toNumber(), 0);
+            assert.deepEqual(charityDetails.tags, ["tag1", "tag2"]);
+        });
+
+        it("should not allow registration with an invalid category", async () => {
+            const invalidCategoryId = (await authManager.getCategoryCount()).toNumber();
+            await expectRevert(
+                authManager.registerAsCharity("Charity B", "Description B", charity2, invalidCategoryId, [], { from: charity2 }),
+                "Invalid category"
+            );
+        });
+    });
+
+    describe("Charity Update with Category and Tags", () => {
+        beforeEach(async () => {
+            await authManager.registerAsCharity("Charity A", "Description A", charity1, 0, ["tag1", "tag2"], { from: charity1 });
+        });
+
+        it("should allow a charity to update their category and tags", async () => {
+            const result = await authManager.updateCharityDetails("Charity A Updated", "Description A Updated", 1, ["tag3", "tag4"], { from: charity1 });
+
+            expectEvent(result, 'CharityUpdated', {
+                charityAddress: charity1,
+                name: "Charity A Updated",
+                description: "Description A Updated"
+            });
+
+            const charityDetails = await authManager.getCharityDetails(charity1);
+            assert.equal(charityDetails.name, "Charity A Updated");
+            assert.equal(charityDetails.description, "Description A Updated");
+            assert.equal(charityDetails.category.toNumber(), 1);
+            assert.deepEqual(charityDetails.tags, ["tag3", "tag4"]);
+        });
+
+        it("should not allow updating to an invalid category", async () => {
+            const invalidCategoryId = (await authManager.getCategoryCount()).toNumber();
+            await expectRevert(
+                authManager.updateCharityDetails("Charity A", "Description A", invalidCategoryId, [], { from: charity1 }),
+                "Invalid category"
             );
         });
     });

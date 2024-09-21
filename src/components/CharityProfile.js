@@ -8,15 +8,24 @@ const CharityProfile = ({ address, authManagerContract }) => {
         walletAddress: '',
         registrationDate: '',
         isApproved: false,
-        isActive: true
+        isActive: true,
+        category: '',
+        tags: []
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    const [editedDetails, setEditedDetails] = useState({ name: '', description: '' });
+    const [editedDetails, setEditedDetails] = useState({
+        name: '',
+        description: '',
+        category: 0,
+        tags: ''
+    });
+    const [categories, setCategories] = useState([]);
 
     useEffect(() => {
         fetchCharityDetails();
+        fetchCategories();
     }, [address, authManagerContract]);
 
     const fetchCharityDetails = async () => {
@@ -24,20 +33,42 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setError('');
         try {
             const details = await authManagerContract.getCharityDetails(address);
+            const categoryName = await authManagerContract.getCategoryName(details.category);
             const formattedDetails = {
                 name: details.name,
                 description: details.description,
                 walletAddress: details.walletAddress,
                 registrationDate: new Date(details.registrationDate.toNumber() * 1000).toLocaleString(),
                 isApproved: details.isApproved,
-                isActive: details.isActive
+                isActive: details.isActive,
+                category: categoryName,
+                tags: details.tags
             };
             setCharityDetails(formattedDetails);
-            setEditedDetails({ name: formattedDetails.name, description: formattedDetails.description });
+            setEditedDetails({
+                name: formattedDetails.name,
+                description: formattedDetails.description,
+                category: details.category,
+                tags: formattedDetails.tags.join(', ')
+            });
         } catch (error) {
             setError(`Failed to load charity details: ${error.message}`);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const categoryCount = await authManagerContract.getCategoryCount();
+            const fetchedCategories = [];
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await authManagerContract.getCategoryName(i);
+                fetchedCategories.push({ id: i, name: categoryName });
+            }
+            setCategories(fetchedCategories);
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
         }
     };
 
@@ -47,7 +78,12 @@ const CharityProfile = ({ address, authManagerContract }) => {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        setEditedDetails({ name: charityDetails.name, description: charityDetails.description });
+        setEditedDetails({
+            name: charityDetails.name,
+            description: charityDetails.description,
+            category: categories.findIndex(cat => cat.name === charityDetails.category),
+            tags: charityDetails.tags.join(', ')
+        });
     };
 
     const handleInputChange = (e) => {
@@ -60,8 +96,14 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.updateCharityDetails(editedDetails.name, editedDetails.description);
-            setCharityDetails(prev => ({ ...prev, ...editedDetails }));
+            const tagArray = editedDetails.tags.split(',').map(tag => tag.trim());
+            await authManagerContract.updateCharityDetails(
+                editedDetails.name,
+                editedDetails.description,
+                editedDetails.category,
+                tagArray
+            );
+            await fetchCharityDetails(); // Refresh the details after update
             setIsEditing(false);
             alert("Updated charity information successfully!");
         } catch (error) {
@@ -139,6 +181,34 @@ const CharityProfile = ({ address, authManagerContract }) => {
                             required
                         />
                     </div>
+                    <div className="mb-4">
+                        <label htmlFor="category" className="block text-gray-600">Category:</label>
+                        <select
+                            id="category"
+                            name="category"
+                            value={editedDetails.category}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded"
+                            required
+                        >
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="tags" className="block text-gray-600">Tags (comma-separated):</label>
+                        <input
+                            type="text"
+                            id="tags"
+                            name="tags"
+                            value={editedDetails.tags}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border rounded"
+                        />
+                    </div>
                     <div className="flex justify-between">
                         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                             Save Changes
@@ -153,6 +223,20 @@ const CharityProfile = ({ address, authManagerContract }) => {
                     <div className="mb-4">
                         <p className="text-gray-600">Description:</p>
                         <p>{charityDetails.description}</p>
+                    </div>
+                    <div className="mb-4">
+                        <p className="text-gray-600">Category:</p>
+                        <p className="font-semibold">{charityDetails.category}</p>
+                    </div>
+                    <div className="mb-4">
+                        <p className="text-gray-600">Tags:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {charityDetails.tags.map((tag, index) => (
+                                <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                     <div className="mb-4">
                         <p className="text-gray-600">Wallet Address:</p>
