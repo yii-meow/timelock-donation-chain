@@ -22,6 +22,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
         tags: ''
     });
     const [categories, setCategories] = useState([]);
+    const [transactionPending, setTransactionPending] = useState(false);
 
     useEffect(() => {
         fetchCharityDetails();
@@ -95,22 +96,39 @@ const CharityProfile = ({ address, authManagerContract }) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
+        setTransactionPending(true);
         try {
             const tagArray = editedDetails.tags.split(',').map(tag => tag.trim());
-            await authManagerContract.updateCharityDetails(
+            const transaction = await authManagerContract.updateCharityDetails(
                 editedDetails.name,
                 editedDetails.description,
                 editedDetails.category,
                 tagArray
             );
-            await fetchCharityDetails(); // Refresh the details after update
+            // Update UI optimistically
+            const optimisticUpdate = {
+                ...charityDetails,
+                name: editedDetails.name,
+                description: editedDetails.description,
+                category: categories[editedDetails.category].name,
+                tags: tagArray
+            };
+            setCharityDetails(optimisticUpdate);
             setIsEditing(false);
-            alert("Updated charity information successfully!");
+
+            // Wait for transaction to be mined
+            await transaction.wait();
+
+            // Fetch the updated details from the blockchain
+            await fetchCharityDetails();
+
+            alert("Charity information updated successfully!");
         } catch (error) {
             console.error("Failed to update charity details:", error);
             setError("Failed to update charity details. Please try again later.");
         } finally {
             setIsLoading(false);
+            setTransactionPending(false);
         }
     };
 
@@ -155,6 +173,14 @@ const CharityProfile = ({ address, authManagerContract }) => {
     return (
         <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">{charityDetails.name}</h2>
+            {transactionPending && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+                    <div className="bg-white p-5 rounded-md">
+                        <p className="text-lg font-semibold mb-2">Transaction Pending</p>
+                        <p>Please wait while your transaction for updating information is being processed...</p>
+                    </div>
+                </div>
+            )}
             {isEditing ? (
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
