@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
-const CharityProfile = ({ address, authManagerContract }) => {
+const CharityProfile = ({ userState }) => {
     const [charityDetails, setCharityDetails] = useState({
         name: '',
         description: '',
@@ -25,16 +25,21 @@ const CharityProfile = ({ address, authManagerContract }) => {
     const [transactionPending, setTransactionPending] = useState(false);
 
     useEffect(() => {
-        fetchCharityDetails();
-        fetchCategories();
-    }, [address, authManagerContract]);
+        if (userState.authManagerContract && userState.address) {
+            fetchCharityDetails();
+            fetchCategories();
+        } else {
+            setError("Contract or address not available. Please ensure you're connected.");
+            setIsLoading(false);
+        }
+    }, [userState.authManagerContract, userState.address]);
 
     const fetchCharityDetails = async () => {
         setIsLoading(true);
         setError('');
         try {
-            const details = await authManagerContract.getCharityDetails(address);
-            const categoryName = await authManagerContract.getCategoryName(details.category);
+            const details = await userState.authManagerContract.getCharityDetails(userState.address);
+            const categoryName = await userState.authManagerContract.getCategoryName(details.category);
             const formattedDetails = {
                 name: details.name,
                 description: details.description,
@@ -61,10 +66,10 @@ const CharityProfile = ({ address, authManagerContract }) => {
 
     const fetchCategories = async () => {
         try {
-            const categoryCount = await authManagerContract.getCategoryCount();
+            const categoryCount = await userState.authManagerContract.getCategoryCount();
             const fetchedCategories = [];
             for (let i = 0; i < categoryCount; i++) {
-                const categoryName = await authManagerContract.getCategoryName(i);
+                const categoryName = await userState.authManagerContract.getCategoryName(i);
                 fetchedCategories.push({ id: i, name: categoryName });
             }
             setCategories(fetchedCategories);
@@ -99,7 +104,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setTransactionPending(true);
         try {
             const tagArray = editedDetails.tags.split(',').map(tag => tag.trim());
-            const transaction = await authManagerContract.updateCharityDetails(
+            const transaction = await userState.authManagerContract.updateCharityDetails(
                 editedDetails.name,
                 editedDetails.description,
                 editedDetails.category,
@@ -136,7 +141,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.deactivateCharity();
+            await userState.authManagerContract.deactivateCharity();
             setCharityDetails(prev => ({ ...prev, isActive: false }));
             alert("Your charity account has been deactivated.");
         } catch (error) {
@@ -151,7 +156,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.reactivateCharity();
+            await userState.authManagerContract.reactivateCharity();
             setCharityDetails(prev => ({ ...prev, isActive: true }));
             alert("Your charity account has been reactivated.");
         } catch (error) {

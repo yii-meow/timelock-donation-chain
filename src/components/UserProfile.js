@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
-const UserProfile = ({ address, authManagerContract }) => {
+const UserProfile = ({ userState, onStatusChange }) => {
     const [userProfile, setUserProfile] = useState({ name: '', email: '', registrationDate: '', isActive: true });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -10,13 +10,16 @@ const UserProfile = ({ address, authManagerContract }) => {
 
     useEffect(() => {
         fetchUserProfile();
-    }, []);
+    }, [userState.authManagerContract]);
 
     const fetchUserProfile = async () => {
         setIsLoading(true);
         setError('');
         try {
-            const profile = await authManagerContract.getUserDetails();
+            if (!userState.authManagerContract) {
+                throw new Error("Auth manager contract is not initialized");
+            }
+            const profile = await userState.authManagerContract.getUserDetails();
             const registrationDate = new Date(profile.registrationDate.toNumber() * 1000);
             setUserProfile({
                 name: profile.name,
@@ -27,7 +30,7 @@ const UserProfile = ({ address, authManagerContract }) => {
             setEditedProfile({ name: profile.name, email: profile.email });
         } catch (error) {
             console.error("Failed to fetch user profile:", error);
-            setError("Failed to load user profile. Please try again later.");
+            setError(`Failed to load user profile: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -52,7 +55,7 @@ const UserProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.updateUserDetails(editedProfile.name, editedProfile.email);
+            await userState.authManagerContract.updateUserDetails(editedProfile.name, editedProfile.email);
             setUserProfile(prev => ({ ...prev, ...editedProfile }));
             setIsEditing(false);
             alert("Successfully updated user profile!");
@@ -68,7 +71,7 @@ const UserProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.deactivateUser();
+            await userState.authManagerContract.deactivateUser();
             setUserProfile(prev => ({ ...prev, isActive: false }));
             alert("Your account has been deactivated.");
         } catch (error) {
@@ -83,7 +86,7 @@ const UserProfile = ({ address, authManagerContract }) => {
         setIsLoading(true);
         setError('');
         try {
-            await authManagerContract.reactivateUser();
+            await userState.authManagerContract.reactivateUser();
             setUserProfile(prev => ({ ...prev, isActive: true }));
             alert("Your account has been reactivated.");
         } catch (error) {
@@ -107,7 +110,7 @@ const UserProfile = ({ address, authManagerContract }) => {
             <h2 className="text-2xl font-bold mb-4">User Profile</h2>
             <div className="mb-4">
                 <p className="text-gray-600">Wallet Address:</p>
-                <p className="font-semibold">{address}</p>
+                <p className="font-semibold">{userState.address}</p>
             </div>
             {isEditing ? (
                 <form onSubmit={handleSubmit}>

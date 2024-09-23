@@ -1,43 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import { useNavigate } from 'react-router-dom';
 import { AUTH_MANAGER_ABI } from '../abis/AuthManager';
-import UserDashboard from './UserDashboard';
-import CharityDashboard from './CharityDashboard';
 import Logo from '../Logo';
 
 const AUTH_MANAGER_ADDRESS = process.env.REACT_APP_AUTH_MANAGER_ADDRESS;
 
-const MainPage = () => {
-    const [isConnected, setIsConnected] = useState(false);
-    const [isUser, setIsUser] = useState(false);
-    const [isCharity, setIsCharity] = useState(false);
-    const [address, setAddress] = useState('');
-    const [availableAddresses, setAvailableAddresses] = useState([]);
-    const [authManagerContract, setAuthManagerContract] = useState(null);
+const MainPage = ({ setUserState, userState, disconnectWallet }) => {
+    const navigate = useNavigate();
     const [showRegistrationForm, setShowRegistrationForm] = useState(false);
     const [registrationType, setRegistrationType] = useState('');
-    const [registrationData, setRegistrationData] = useState({
-        name: '',
-        email: '',
-        description: '',
-    });
+    const [registrationData, setRegistrationData] = useState({ name: '', email: '', description: '' });
     const [error, setError] = useState('');
-    const [provider, setProvider] = useState(null);
-
-
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(0);
     const [tags, setTags] = useState('');
 
     useEffect(() => {
-        checkIfWalletIsConnected();
-
-        // Listen for account changes
+        // checkIfWalletIsConnected();
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', handleAccountsChanged);
         }
-
-        // Cleanup listener on component unmount
         return () => {
             if (window.ethereum) {
                 window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
@@ -46,44 +29,26 @@ const MainPage = () => {
     }, []);
 
     useEffect(() => {
-        if (authManagerContract) {
+        if (userState.authManagerContract) {
             fetchCategories();
         }
-    }, [authManagerContract]);
+    }, [userState.authManagerContract]);
 
-    const handleAccountsChanged = async (accounts) => {
-        if (accounts.length === 0) {
-            // User disconnected their wallet
-            disconnectWallet();
-        } else {
-            // User switched to a different account
-            await selectAddress(accounts[0]);
+    useEffect(() => {
+        if (userState.isUser) {
+            navigate('/dashboard');
+        } else if (userState.isCharity) {
+            navigate('/charity-dashboard');
         }
-    };
-
-    const fetchCategories = async () => {
-        try {
-            const categoryCount = await authManagerContract.getCategoryCount();
-            const fetchedCategories = [];
-            for (let i = 0; i < categoryCount; i++) {
-                const categoryName = await authManagerContract.getCategoryName(i);
-                fetchedCategories.push(categoryName);
-            }
-            setCategories(fetchedCategories);
-        } catch (error) {
-            console.error("Failed to fetch categories:", error);
-        }
-    };
+    }, [userState.isUser, userState.isCharity, navigate]);
 
     const checkIfWalletIsConnected = async () => {
         if (typeof window.ethereum !== 'undefined') {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
-                setProvider(provider);
                 const accounts = await provider.listAccounts();
                 if (accounts.length > 0) {
-                    setAvailableAddresses(accounts);
-                    await selectAddress(accounts[0]);
+                    await connectWallet();
                 }
             } catch (error) {
                 setError("Failed to connect to the wallet. Please try again.");
@@ -93,11 +58,20 @@ const MainPage = () => {
         }
     };
 
+    const handleAccountsChanged = async (accounts) => {
+        if (accounts.length === 0) {
+            // MetaMask is locked or the user has not connected any accounts
+            disconnectWallet();
+        } else if (accounts[0] !== userState.address) {
+            // User has switched accounts
+            await selectAddress(accounts[0]);
+        }
+    };
+
     const connectWallet = async () => {
         if (window.ethereum) {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                setAvailableAddresses(accounts);
                 if (accounts.length > 0) {
                     await selectAddress(accounts[0]);
                 }
@@ -116,18 +90,39 @@ const MainPage = () => {
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(AUTH_MANAGER_ADDRESS, AUTH_MANAGER_ABI, signer);
 
-            setAddress(selectedAddress);
-            setAuthManagerContract(authManagerContract);
-            setIsConnected(true);
-
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
 
-            setIsUser(isUserRegistered);
-            setIsCharity(isCharityRegistered);
+            setUserState({
+                address: selectedAddress,
+                authManagerContract: authManagerContract,
+                isConnected: true,
+                isUser: isUserRegistered,
+                isCharity: isCharityRegistered,
+            });
+
+            if (isUserRegistered) {
+                navigate('/dashboard');
+            } else if (isCharityRegistered) {
+                navigate('/charity-dashboard');
+            }
         } catch (error) {
             console.error("An error occurred while selecting the address:", error);
             setError("Failed to select the address. Please try again.");
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const categoryCount = await userState.authManagerContract.getCategoryCount();
+            const fetchedCategories = [];
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await userState.authManagerContract.getCategoryName(i);
+                fetchedCategories.push(categoryName);
+            }
+            setCategories(fetchedCategories);
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
         }
     };
 
@@ -138,16 +133,13 @@ const MainPage = () => {
         } else if (name === 'tags') {
             setTags(value);
         } else {
-            setRegistrationData(prevData => ({
-                ...prevData,
-                [name]: value
-            }));
+            setRegistrationData(prevData => ({ ...prevData, [name]: value }));
         }
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        if (!authManagerContract) {
+        if (!userState.authManagerContract) {
             console.error("AuthManager contract is not initialized");
             return;
         }
@@ -155,13 +147,13 @@ const MainPage = () => {
         try {
             let tx;
             if (registrationType === 'user') {
-                tx = await authManagerContract.registerAsUser(registrationData.name, registrationData.email);
+                tx = await userState.authManagerContract.registerAsUser(registrationData.name, registrationData.email);
             } else if (registrationType === 'charity') {
                 const tagArray = tags.split(',').map(tag => tag.trim());
-                tx = await authManagerContract.registerAsCharity(
+                tx = await userState.authManagerContract.registerAsCharity(
                     registrationData.name,
                     registrationData.description,
-                    address,
+                    userState.address,
                     selectedCategory,
                     tagArray
                 );
@@ -169,34 +161,21 @@ const MainPage = () => {
 
             await tx.wait();
 
-            if (registrationType === 'user') {
-                setIsUser(true);
-            } else if (registrationType === 'charity') {
-                setIsCharity(true);
-            }
+            // Update the global userState after successful registration
+            setUserState(prevState => ({
+                ...prevState,
+                isUser: registrationType === 'user',
+                isCharity: registrationType === 'charity'
+            }));
 
             setShowRegistrationForm(false);
+
+            // Navigation will be handled by the useEffect hook
         } catch (error) {
             console.error("An error occurred during registration:", error);
+            setError("Registration failed. Please try again.");
         }
     };
-
-    const disconnectWallet = () => {
-        setIsConnected(false);
-        setIsUser(false);
-        setIsCharity(false);
-        setAddress('');
-        setAuthManagerContract(null);
-        setError('');
-    };
-
-    if (isUser) {
-        return <UserDashboard address={address} authManagerContract={authManagerContract} onDisconnect={disconnectWallet} />;
-    }
-
-    if (isCharity) {
-        return <CharityDashboard address={address} authManagerContract={authManagerContract} onDisconnect={disconnectWallet} />;
-    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -204,26 +183,19 @@ const MainPage = () => {
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center py-4">
                         <div className="text-xl font-bold">DonationChain</div>
-                        {!isConnected ? (
+                        {!userState.isConnected ? (
                             <button onClick={connectWallet} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
                                 Connect Wallet
                             </button>
                         ) : (
-                            <div className="flex items-center">
-                                {/* <select
-                                    value={address}
-                                    onChange={(e) => selectAddress(e.target.value)}
-                                    className="bg-white text-blue-600 font-semibold py-2 px-4 rounded mr-2"
-                                >
-                                    <option value="">Select an address</option>
-                                    {availableAddresses.map((addr) => (
-                                        <option key={addr} value={addr}>
-                                            {addr.slice(0, 6)}...{addr.slice(-4)}
-                                        </option>
-                                    ))}
-                                </select> */}
-                                <button onClick={() => setShowRegistrationForm(true)} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
-                                    Register
+                            <div className="flex items-center space-x-4">
+                                {!userState.isUser && !userState.isCharity && (
+                                    <button onClick={() => setShowRegistrationForm(true)} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
+                                        Register
+                                    </button>
+                                )}
+                                <button onClick={disconnectWallet} className="bg-red-500 text-white font-semibold py-2 px-4 rounded">
+                                    Disconnect
                                 </button>
                             </div>
                         )}
@@ -237,12 +209,15 @@ const MainPage = () => {
                     <p className="text-gray-600 mb-4">
                         DonationChain is a decentralized platform that connects donors with verified charities. Make secure, transparent donations using blockchain technology.
                     </p>
-                    {isConnected ? (<>
-                        <p className="font-semibold">Connected Address: {address}</p>
-                        <div class="p-4 mb-2 text-sm text-red-800 rounded-lg bg-red-50 dark:text-red-400 mt-5" role="alert">
-                            You are not registered yet!
-                        </div>
-                    </>
+                    {userState.isConnected ? (
+                        <>
+                            <p className="font-semibold">Connected Address: {userState.address}</p>
+                            {!userState.isUser && !userState.isCharity && (
+                                <div className="p-4 mb-2 text-sm text-red-800 rounded-lg bg-red-50 dark:text-red-400 mt-5" role="alert">
+                                    You are not registered yet!
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <p className="text-yellow-600">Please connect your wallet to get started.</p>
                     )}
