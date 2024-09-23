@@ -275,7 +275,7 @@ const CharityProfile = ({ address, authManagerContract }) => {
                     <div className="mb-4">
                         <p className="text-gray-600">Approval Status:</p>
                         <p className={charityDetails.isApproved ? "text-green-500" : "text-yellow-500"}>
-                            {charityDetails.isApproved ? "Approved" : "Pending Approval"}
+                            {charityDetails.isApproved ? "Approved" : "Pending Approval by Admin"}
                         </p>
                     </div>
                     <div className="mb-4">

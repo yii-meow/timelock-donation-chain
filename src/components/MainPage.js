@@ -31,6 +31,18 @@ const MainPage = () => {
 
     useEffect(() => {
         checkIfWalletIsConnected();
+
+        // Listen for account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+        }
+
+        // Cleanup listener on component unmount
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -38,6 +50,16 @@ const MainPage = () => {
             fetchCategories();
         }
     }, [authManagerContract]);
+
+    const handleAccountsChanged = async (accounts) => {
+        if (accounts.length === 0) {
+            // User disconnected their wallet
+            disconnectWallet();
+        } else {
+            // User switched to a different account
+            await selectAddress(accounts[0]);
+        }
+    };
 
     const fetchCategories = async () => {
         try {
@@ -90,6 +112,7 @@ const MainPage = () => {
 
     const selectAddress = async (selectedAddress) => {
         try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(AUTH_MANAGER_ADDRESS, AUTH_MANAGER_ABI, signer);
 
@@ -187,7 +210,7 @@ const MainPage = () => {
                             </button>
                         ) : (
                             <div className="flex items-center">
-                                <select
+                                {/* <select
                                     value={address}
                                     onChange={(e) => selectAddress(e.target.value)}
                                     className="bg-white text-blue-600 font-semibold py-2 px-4 rounded mr-2"
@@ -198,7 +221,7 @@ const MainPage = () => {
                                             {addr.slice(0, 6)}...{addr.slice(-4)}
                                         </option>
                                     ))}
-                                </select>
+                                </select> */}
                                 <button onClick={() => setShowRegistrationForm(true)} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
                                     Register
                                 </button>
@@ -214,8 +237,12 @@ const MainPage = () => {
                     <p className="text-gray-600 mb-4">
                         DonationChain is a decentralized platform that connects donors with verified charities. Make secure, transparent donations using blockchain technology.
                     </p>
-                    {isConnected ? (
+                    {isConnected ? (<>
                         <p className="font-semibold">Connected Address: {address}</p>
+                        <div class="p-4 mb-2 text-sm text-red-800 rounded-lg bg-red-50 dark:text-red-400 mt-5" role="alert">
+                            You are not registered yet!
+                        </div>
+                    </>
                     ) : (
                         <p className="text-yellow-600">Please connect your wallet to get started.</p>
                     )}
@@ -262,6 +289,15 @@ const MainPage = () => {
                                 )}
                                 {registrationType === 'charity' && (
                                     <>
+                                        <input
+                                            type="text"
+                                            name="description"
+                                            value={registrationData.description}
+                                            onChange={handleInputChange}
+                                            placeholder="Description"
+                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                            required
+                                        />
                                         <select
                                             name="category"
                                             value={selectedCategory}
