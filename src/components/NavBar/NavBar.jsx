@@ -12,27 +12,31 @@ const NavBar = () => {
   const menuItems = [
     {
       menu: "All Users",
-      link: "/Alluser"
+      link: "/chat/allusers"
     },
     {
       menu: "CHAT",
-      link: "/Chat"
+      link: "/chat/chat"
     },
     {
       menu: "CONTACT",
-      link: "/"
+      link: "/chat"
     },
     {
       menu: "SETTING",
-      link: "/"
+      link: "/chat"
     },
     {
       menu: "FAQS",
-      link: "/"
+      link: "/chat"
     },
     {
       menu: "TERMS OF USE",
-      link: "/"
+      link: "/chat"
+    },
+    {
+      menu: "EXIT CHAT",
+      link: "/dashboard"
     }
   ];
 
