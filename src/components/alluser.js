@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react'
 
 import { UserCard } from './chatappindex';
-import Style from './components/styles/alluser.module.css';
-import { ChatAppContext } from './ChatAppContext';
+import Style from './styles/alluser.module.css';
+import { ChatAppContext } from '../ChatAppContext';
 
 const Alluser = () => {
     const { userLists, addFriends } = useContext(ChatAppContext);
-
 
     return (
         <div>

@@ -3,7 +3,7 @@ import React,{useState,useContext} from "react";
 import Style from './Model.module.css';
 import images from "../../assets";
 import {ChatAppContext} from '../../ChatAppContext';
-import {Loader} from '../../chatappindex';
+import {Loader} from '../chatappindex';
 
 const Model = ({openBox, title, head, info, smallInfo, image, functionName, address}) => {
   

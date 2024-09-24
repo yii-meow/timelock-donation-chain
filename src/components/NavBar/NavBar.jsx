@@ -4,7 +4,7 @@ import {Link} from "react-router-dom";
 
 import Style from "./NavBar.module.css";
 import {ChatAppContext} from "../../ChatAppContext";
-import {Model, Error} from "../../chatappindex";
+import {Error} from "../chatappindex";
 import images from "../../assets";
 
 
@@ -43,9 +43,8 @@ const NavBar = () => {
   //usestate
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
-  const [openModel, setOpenModel] = useState(false);
 
-  const{account, userName, connectWallet, createAccount, error} = useContext(ChatAppContext);
+  const{account, userName, connectWallet, error} = useContext(ChatAppContext);
 
   return (
     <div className={Style.NavBar}>
@@ -73,27 +72,6 @@ const NavBar = () => {
           </div>
         ))}
       </div>
-          
-          {/*CONNECT WALLET*/}
-          <div className={Style.NavBar_box_right_connect}>
-            {account == ""? (
-              <button onClick={()=> connectWallet()}>
-                {""}
-                <span>Connect Wallet</span>
-              </button>
-            ):(
-              <button onClick={()=> setOpenModel(true)}>
-                {""}
-                <img src={userName ? images.accountName : images.create2}
-                  alt="Acccount image"
-                  width={20}
-                  height={20}
-                />
-                {''}
-                <small>{userName || "Create Account"}</small>
-              </button>
-            )}
-          </div>
 
           <div 
             className={Style.NavBar_box_right_open}
@@ -103,22 +81,6 @@ const NavBar = () => {
           </div>
         </div>
       </div>
-
-      {/*Model component */}
-      {openModel &&(
-        <div className={Style.modelBox}>
-          <Model 
-            openBox = {setOpenModel}
-            title="Welcome to"
-            head="DonationChain Chat"
-            smallInfo="Please enter your detail here: "
-            image = {images.hero}
-            functionName = {createAccount}
-            address={account}
-          />
-        </div>
-      )}
-      {error == "" ? "" : <Error error={error}/>}
     </div>
   );
 };

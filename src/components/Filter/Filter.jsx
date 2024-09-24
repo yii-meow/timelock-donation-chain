@@ -3,8 +3,7 @@ import React, {useState, useContext} from "react";
 import Style from "./Filter.module.css";
 import images from "../../assets";
 import { ChatAppContext } from "../../ChatAppContext";
-import {Model} from "../../chatappindex";
-import {Friend} from "../../chatappindex";
+import {Model,Friend} from "../chatappindex";
 
 const Filter = () => {
 

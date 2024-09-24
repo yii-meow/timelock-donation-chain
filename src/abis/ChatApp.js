@@ -3,52 +3,51 @@ export const Chat_App_ABI = [
         "inputs": [
             {
                 "internalType": "address",
-                "name": "pubkey",
+                "name": "_authManagerAddress",
                 "type": "address"
             }
         ],
-        "name": "checkUserExists",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "nonpayable",
+        "type": "constructor"
     },
     {
+        "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "friend",
+                "type": "address"
+            },
+            {
+                "indexed": false,
                 "internalType": "string",
                 "name": "name",
                 "type": "string"
             }
         ],
-        "name": "createAccount",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "name": "FriendAdded",
+        "type": "event"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "authManager",
+        "outputs": [
             {
-                "internalType": "address",
-                "name": "pubkey",
+                "internalType": "contract AuthManager",
+                "name": "",
                 "type": "address"
             }
         ],
-        "name": "getUserName",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -85,13 +84,14 @@ export const Chat_App_ABI = [
                         "type": "string"
                     }
                 ],
-                "internalType": "struct ChatApp.friend[]",
+                "internalType": "struct ChatApp.Friend[]",
                 "name": "",
                 "type": "tuple[]"
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -139,37 +139,27 @@ export const Chat_App_ABI = [
                         "type": "string"
                     }
                 ],
-                "internalType": "struct ChatApp.message[]",
+                "internalType": "struct ChatApp.Message[]",
                 "name": "",
                 "type": "tuple[]"
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
-        "name": "getAllAppUser",
+        "name": "getAllAppUsers",
         "outputs": [
             {
-                "components": [
-                    {
-                        "internalType": "string",
-                        "name": "name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "accountAddress",
-                        "type": "address"
-                    }
-                ],
-                "internalType": "struct ChatApp.AllUserStruck[]",
+                "internalType": "address[]",
                 "name": "",
-                "type": "tuple[]"
+                "type": "address[]"
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     }
 ]

@@ -1,14 +1,16 @@
 import React from 'react';
-import { Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ChatAppProvider } from './ChatAppContext';
-import { NavBar, Filter, Alluser } from './chatappindex';
+import { NavBar, Filter, Alluser } from './components/chatappindex';
 import './components/styles/ChatApp.css'
 
 const ChatWrapper = ({ userState }) => {
-    const navigate = useNavigate();
+    if (!userState.isConnected || (!userState.isUser && !userState.isCharity)) {
+        return <Navigate to="/" replace />;
+    }
 
     return (
-        <ChatAppProvider>
+        <ChatAppProvider initialUserState={userState}>
             <div className="chat-app-wrapper text-white">
                 <NavBar />
                 <Routes>

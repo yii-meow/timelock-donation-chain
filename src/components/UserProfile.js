@@ -55,8 +55,9 @@ const UserProfile = ({ userState, onStatusChange }) => {
         setIsLoading(true);
         setError('');
         try {
-            await userState.authManagerContract.updateUserDetails(editedProfile.name, editedProfile.email);
-            setUserProfile(prev => ({ ...prev, ...editedProfile }));
+            const tx = await userState.authManagerContract.updateUserDetails(editedProfile.name, editedProfile.email);
+            await tx.wait(); // Wait for the transaction to be mined
+            await fetchUserProfile(); // Fetch the updated profile from the blockchain
             setIsEditing(false);
             alert("Successfully updated user profile!");
         } catch (error) {
@@ -71,8 +72,9 @@ const UserProfile = ({ userState, onStatusChange }) => {
         setIsLoading(true);
         setError('');
         try {
-            await userState.authManagerContract.deactivateUser();
-            setUserProfile(prev => ({ ...prev, isActive: false }));
+            const tx = await userState.authManagerContract.deactivateUser();
+            await tx.wait(); // Wait for the transaction to be mined
+            await fetchUserProfile(); // Fetch the updated profile from the blockchain
             alert("Your account has been deactivated.");
         } catch (error) {
             console.error("Failed to deactivate user:", error);
@@ -86,8 +88,9 @@ const UserProfile = ({ userState, onStatusChange }) => {
         setIsLoading(true);
         setError('');
         try {
-            await userState.authManagerContract.reactivateUser();
-            setUserProfile(prev => ({ ...prev, isActive: true }));
+            const tx = await userState.authManagerContract.reactivateUser();
+            await tx.wait(); // Wait for the transaction to be mined
+            await fetchUserProfile(); // Fetch the updated profile from the blockchain
             alert("Your account has been reactivated.");
         } catch (error) {
             console.error("Failed to reactivate user:", error);
