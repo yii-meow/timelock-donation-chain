@@ -26,7 +26,6 @@ const Chat = ({functionName, readMessage, friendMsg, account, userName, loading,
     <div className={Style.Chat}>
       {currentUserName && currentUserAddress ? (
         <div className={Style.Chat_user_info}> 
-
           <img src={images.accountName} alt="image" width={70} height={70}/>
 
           <div className={Style.Chat_user_info_box}>
