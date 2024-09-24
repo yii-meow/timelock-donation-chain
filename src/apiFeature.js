@@ -3,7 +3,7 @@ import Web3Modal from 'web3modal';
 
 
 import { Chat_App_ABI } from './abis/ChatApp';
-const ChatAppAddress = "0x7019c2E21fAd30FC637fb914610b3cB32A5Fb377";
+const ChatAppAddress = process.env.REACT_APP_CHAT_ADDRESS;
 
 
 export const CheckIfWalletConnected = async () => {
