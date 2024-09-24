@@ -129,8 +129,11 @@ const CharityProfile = ({ userState }) => {
 
             alert("Charity information updated successfully!");
         } catch (error) {
-            console.error("Failed to update charity details:", error);
-            setError("Failed to update charity details. Please try again later.");
+            console.error("Failed to update charity details:", error.data.data.reason);
+            setError(`Failed to update charity details, ${error.data.data.reason ? error.data.data.reason : ""}. Please try again later.`);
+            setInterval(() => {
+                window.location.reload()
+            }, 2000);
         } finally {
             setIsLoading(false);
             setTransactionPending(false);
