@@ -28,12 +28,10 @@ const Chat = ({functionName, readMessage, friendMsg, account, userName, loading,
         <div className={Style.Chat_user_info}> 
 
           <img src={images.accountName} alt="image" width={70} height={70}/>
-
           <div className={Style.Chat_user_info_box}>
             <h4>{currentUserName}</h4>
             <p className={Style.show}> {currentUserAddress} </p>
           </div>
-
         </div>
       ): ("")}
 
@@ -69,7 +67,6 @@ const Chat = ({functionName, readMessage, friendMsg, account, userName, loading,
               ))}
           </div>
         </div>
-
         {currentUserName && currentUserAddress ? (
           <div className={Style.Chat_box_send}>
             <div className={Style.Chat_box_send_img}>

@@ -9,7 +9,7 @@ const Card = ({readMessage, el,i, readUser}) => {
   console.log(el);
   
   return(
-    <Link to={{pathname:"/Chat", search: `?name=${encodeURIComponent(el.name)}&address=${encodeURIComponent(el.pubkey)}`}}>
+    <Link to={{pathname:"/chat/chat", search: `?name=${encodeURIComponent(el.name)}&address=${encodeURIComponent(el.pubkey)}`}}>
       <div className={Style.Card} onClick={()=> (readMessage(el.pubkey), readUser(el.pubkey))}>
 
         <div className={Style.Card_box}>
