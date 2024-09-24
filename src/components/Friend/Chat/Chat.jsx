@@ -48,6 +48,7 @@ const Chat = () => {
 
   return (
     <div className={Style.Chat}>
+      
       {currentUserName && currentUserAddress ? (
         <div className={Style.Chat_user_info}> 
           <img src={images.accountName} alt="image" width={70} height={70}/>

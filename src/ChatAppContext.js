@@ -88,6 +88,33 @@ export const ChatAppProvider = ({ children, initialUserState }) => {
         }
     };
 
+    const addFriends = async ({ name, accountAddress }) => {
+        try {
+            if (!name || !accountAddress) {
+                setError("Please provide both name and account address");
+                return;
+            }
+
+            setLoading(true);
+            const contract = await connectingWithContract();
+            const addFriendTx = await contract.addFriend(accountAddress, name);
+            await addFriendTx.wait();
+
+            setLoading(false);
+
+            // Refresh friend list
+            const updatedFriendList = await contract.getMyFriendList();
+            setFriendLists(updatedFriendList);
+
+            // Optionally, you can also update the userLists here if needed
+
+        } catch (error) {
+            console.error("Error adding friend:", error);
+            setError("Failed to add friend. Please try again.");
+            setLoading(false);
+        }
+    };
+
     return (
         <ChatAppContext.Provider value={{
             account,
@@ -100,6 +127,7 @@ export const ChatAppProvider = ({ children, initialUserState }) => {
             readMessage,
             sendMessage,
             readUser,
+            addFriends,
             currentUserName,
             currentUserAddress,
             CheckIfWalletConnected,

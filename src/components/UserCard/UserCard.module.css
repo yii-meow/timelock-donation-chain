@@ -1,26 +1,31 @@
-.UserCard{
-    background-color: rgba(0,0,0,0.25);
+.UserCard {
+    background-color: rgba(0, 0, 0, 0.25);
     border: .5rem;
     text-align: center;
     padding: 1rem;
     position: relative;
 }
 
-.UserCard_box_img{
+.UserCard_box_img {
     border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 40%;
+    margin-bottom: 1rem;
 }
 
-.UserCard_box_info button{
-    background-color: rgba(0,0,0,0.25);
+.UserCard_box_info button {
+    background-color: rgba(0, 0, 0, 0.25);
     color: #f18303;
-    width: 50%;
+    width: 80%;
     padding: 1rem;
     border: none;
     border-radius: .5rem;
     cursor: pointer;
+    margin-top: 1rem;
 }
 
-.number{
+.number {
     position: absolute;
     left: 1rem;
     padding: 1rem 1.3rem;

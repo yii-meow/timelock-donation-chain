@@ -37,7 +37,7 @@ const Card = ({ el, i }) => {
             </div>
 
             <div className={Style.Card_box_right_end}>
-              <small>{i + 1}</small>
+              <small>Friend #{i + 1}</small>
             </div>
           </div>
         </div>

@@ -82,7 +82,7 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                                 Donate
                             </button>
                             <Link
-                                to="/chat"
+                                to="/chat/allusers"
                                 className="py-2 px-4 rounded bg-green-500 hover:bg-green-600"
                             >
                                 Chat

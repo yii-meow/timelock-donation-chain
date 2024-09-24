@@ -13,10 +13,11 @@ const Friend = () => {
 
   return (
     <div>
-
       <div className={Style.Friend}>
         <div className={Style.Friend_box}>
           <div className={Style.Friend_box_left}>
+            <u>Friend List</u>
+
             {friendLists.map((el,i)=>(
               <Card key={i+1}
               el={el} 
