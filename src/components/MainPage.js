@@ -41,8 +41,10 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             navigate('/dashboard');
         } else if (userState.isCharity) {
             navigate('/charity-dashboard');
+        } else if (userState.isAdmin) {
+            navigate('/admin-dashboard');
         }
-    }, [userState.isUser, userState.isCharity, navigate]);
+    }, [userState.isUser, userState.isCharity, userState.isAdmin, navigate]);
 
     // const checkIfWalletIsConnected = async () => {
     //     if (typeof window.ethereum !== 'undefined') {
@@ -96,6 +98,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
             const isActive = isUserRegistered ? await authManagerContract.isUserActive(selectedAddress) : true;
+            const isAdmin = await authManagerContract.isAdmin(selectedAddress);
 
             setUserState({
                 address: selectedAddress,
@@ -105,8 +108,12 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
                 isActive: isActive,
+                isAdmin: isAdmin
             });
 
+            if (isAdmin) {
+                navigate('/admin-dashboard');
+            }
             if (isUserRegistered) {
                 navigate('/dashboard');
             } else if (isCharityRegistered) {
@@ -195,7 +202,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                             </button>
                         ) : (
                             <div className="flex items-center space-x-4">
-                                {!userState.isUser && !userState.isCharity && (
+                                {!userState.isUser && !userState.isCharity && !userState.isAdmin && (
                                     <button onClick={() => setShowRegistrationForm(true)} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
                                         Register
                                     </button>

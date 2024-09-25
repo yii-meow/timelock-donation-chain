@@ -204,7 +204,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -223,7 +224,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -389,7 +391,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -443,7 +446,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -462,7 +466,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -475,7 +480,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -494,7 +500,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -513,7 +520,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -532,7 +540,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -551,7 +560,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -570,7 +580,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -583,7 +594,8 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -596,6 +608,27 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_address",
+                "type": "address"
+            }
+        ],
+        "name": "isAdmin",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
     }
 ];

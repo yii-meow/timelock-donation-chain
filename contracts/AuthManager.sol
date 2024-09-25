@@ -300,4 +300,8 @@ contract AuthManager {
     function getAllCharities() public view returns (address[] memory) {
         return allCharities;
     }
+
+    function isAdmin(address _address) public view returns (bool) {
+        return admin == _address;
+    }
 }

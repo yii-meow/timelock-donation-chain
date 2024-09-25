@@ -4,6 +4,7 @@ import MainPage from './components/MainPage';
 import UserDashboard from './components/UserDashboard';
 import CharityDashboard from './components/CharityDashboard';
 import ChatWrapper from './ChatWrapper';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   const [userState, setUserState] = useState({
@@ -13,6 +14,7 @@ function App() {
     isConnected: false,
     isUser: false,
     isCharity: false,
+    isAdmin: false
   });
 
   const disconnectWallet = () => {
@@ -23,6 +25,7 @@ function App() {
       isConnected: false,
       isUser: false,
       isCharity: false,
+      isAdmin: false
     });
   };
 
@@ -62,6 +65,16 @@ function App() {
           <ChatWrapper
             userState={userState}
           />
+        } />
+        <Route path="/admin-dashboard" element={
+          userState.isAdmin ? (
+            <AdminDashboard
+              authManagerContract={userState.authManagerContract}
+              adminAddress={userState.address}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
         } />
       </Routes>
     </Router>
