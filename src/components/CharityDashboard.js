@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CharityProfile from './CharityProfile';
 import { ethers } from 'ethers'
 
-const CharityDashboard = ({ userState, setUserState, authManagerContract, onDisconnect }) => {
+const CharityDashboard = ({ userState, setUserState, onDisconnect }) => {
     const [isApproved, setIsApproved] = useState(false);
     const navigate = useNavigate();
 
@@ -13,7 +13,7 @@ const CharityDashboard = ({ userState, setUserState, authManagerContract, onDisc
 
     const checkApprovalStatus = async () => {
         try {
-            const approved = await authManagerContract.isCharityApproved(userState.address);
+            const approved = await userState.authManagerContract.isCharityApproved(userState.address);
             setIsApproved(approved);
         } catch (error) {
             console.error("Error checking charity approval status:", error);
