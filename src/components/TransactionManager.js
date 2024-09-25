@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import TransactionModal from "./TransactionModal";
+import { Check, X, Eye, Edit, Trash2, PlayCircle, User, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 
 const TransactionManager = ({ timeLockContract, userAddress }) => {
-    const [signatoryAddress, setSignatoryAddress] = useState('');
-    const [viewTransactionId, setViewTransactionId] = useState('');
-    const [approveTransactionId, setApproveTransactionId] = useState('');
-    const [modifyTransactionId, setModifyTransactionId] = useState('');
+    const [transactions, setTransactions] = useState([]);
+    const [transactionCount, setTransactionCount] = useState(0);
+    const [activeTab, setActiveTab] = useState('view');
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [newBeneficiary, setNewBeneficiary] = useState('');
     const [newAmount, setNewAmount] = useState('');
     const [newReleaseTime, setNewReleaseTime] = useState('');
-    const [cancelTransactionId, setCancelTransactionId] = useState('');
-    const [executeTransactionId, setExecuteTransactionId] = useState('');
-
-    const [signatoryResult, setSignatoryResult] = useState('');
-    const [viewResult, setViewResult] = useState('');
-    const [approveResult, setApproveResult] = useState('');
-    const [modifyResult, setModifyResult] = useState('');
-    const [cancelResult, setCancelResult] = useState('');
-    const [executeResult, setExecuteResult] = useState('');
-
-    const [userTransactions, setUserTransactions] = useState([]);
-    const [transactionCount, setTransactionCount] = useState(0);
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchTransactionCount();
@@ -41,14 +30,16 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
             setTransactionCount(count.toNumber());
         } catch (error) {
             console.error("Error fetching transaction count:", error);
+            setError("Failed to fetch transaction count. Please try again.");
         }
     };
 
     const fetchUserTransactions = async () => {
+        setLoading(true);
         try {
             const transactions = [];
             for (let i = 1; i <= transactionCount; i++) {
-                const tx = await timeLockContract.transactions(i)
+                const tx = await timeLockContract.transactions(i);
                 const normalizedUserAddress = userAddress.toLowerCase();
                 const normalizedCreator = tx.creator.toLowerCase();
                 const normalizedBeneficiary = tx.beneficiary.toLowerCase();
@@ -67,9 +58,12 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
                     });
                 }
             }
-            setUserTransactions(transactions);
+            setTransactions(transactions);
         } catch (error) {
             console.error("Error fetching user transactions:", error);
+            setError("Failed to fetch transactions. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -80,233 +74,183 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
         return "Ready for Execution";
     };
 
-    const handleCheckSignatory = async () => {
+    const handleAction = async (action, transactionId) => {
+        setLoading(true);
+        setError('');
+        setSuccess('');
         try {
-            if (!ethers.utils.isAddress(signatoryAddress)) {
-                throw new Error("Invalid address");
+            let tx;
+            switch (action) {
+                case 'approve':
+                    tx = await timeLockContract.approveTransaction(transactionId);
+                    break;
+                case 'cancel':
+                    tx = await timeLockContract.cancelTransaction(transactionId);
+                    break;
+                case 'execute':
+                    const transaction = await timeLockContract.viewTransaction(transactionId);
+                    const amount = transaction[2];
+                    tx = await timeLockContract.executeTransaction(transactionId, { value: amount });
+                    break;
+                case 'modify':
+                    if (!newBeneficiary || !newAmount || !newReleaseTime) {
+                        throw new Error("Please fill all fields for modification");
+                    }
+                    const newReleaseTimeUnix = Math.floor(new Date(newReleaseTime).getTime() / 1000);
+                    tx = await timeLockContract.modifyTransaction(
+                        transactionId,
+                        newBeneficiary,
+                        ethers.utils.parseEther(newAmount),
+                        newReleaseTimeUnix
+                    );
+                    break;
+                default:
+                    throw new Error("Invalid action");
             }
-            const isSignatory = await timeLockContract.isSignatory(signatoryAddress);
-            setSignatoryResult(`Is Signatory: ${isSignatory}`);
-        } catch (error) {
-            setSignatoryResult(`Error: ${error.message}`);
-            if (error.data) {
-                setSignatoryResult(signatoryResult + " " + error.data.data.reason);
-            }
-        }
-    };
-
-    const handleViewTransaction = async () => {
-        try {
-            if (isNaN(viewTransactionId)) {
-                throw new Error("Transaction ID must be a number");
-            }
-            const transaction = await timeLockContract.viewTransaction(viewTransactionId);
-            setViewResult(JSON.stringify({
-                Type: transaction[0],
-                Beneficiary: transaction[1],
-                Amount: ethers.utils.formatEther(transaction[2]) + " ETH",
-                ReleaseTime: new Date(transaction[3].toNumber() * 1000).toLocaleString(),
-                Executed: transaction[4],
-                Approvals: transaction[5].toString(),
-                Modified: transaction[6]
-            }, null, 2));
-        } catch (error) {
-            setViewResult(`Error: ${error.message}`);
-            if (error.data) {
-                setViewResult(viewResult + " " + error.data.data.reason);
-            }
-        }
-    };
-
-    const handleApproveTransaction = async () => {
-        try {
-            if (isNaN(approveTransactionId)) {
-                throw new Error("Transaction ID must be a number");
-            }
-            const tx = await timeLockContract.approveTransaction(approveTransactionId);
             await tx.wait();
-            setApproveResult(`Transaction ID ${approveTransactionId} approved successfully. Hash: ${tx.hash.slice(0, 10)}...`);
+            setSuccess(`Transaction ${action}d successfully`);
+            fetchUserTransactions();
         } catch (error) {
-            setApproveResult(`Error: ${error.message}`);
-            if (error.data) {
-                setApproveResult(approveResult + " " + error.data.data.reason);
-            }
+            console.error(`Error ${action}ing transaction:`, error);
+            setError(`Failed to ${action} transaction. ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleModifyTransaction = async () => {
-        try {
-            if (isNaN(modifyTransactionId) || !ethers.utils.isAddress(newBeneficiary) || isNaN(newAmount) || !newReleaseTime) {
-                throw new Error("Invalid input");
-            }
-            const newReleaseTimeUnix = Math.floor(new Date(newReleaseTime).getTime() / 1000);
-            const tx = await timeLockContract.modifyTransaction(
-                modifyTransactionId,
-                newBeneficiary,
-                ethers.utils.parseEther(newAmount),
-                newReleaseTimeUnix
-            );
-            await tx.wait();
-            setModifyResult(`Transaction ID ${modifyTransactionId} modified successfully. Hash: ${tx.hash.slice(0, 10)}...`);
-        } catch (error) {
-            setModifyResult(`Error: ${error.message}`);
-            if (error.data) {
-                setModifyResult(modifyResult + " " + error.data.data.reason);
-            }
-        }
-    };
+    const renderTransactionList = () => (
+        <div className="overflow-x-auto">
+            <table className="min-w-full bg-white">
+                <thead className="bg-gray-100">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiary</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (ETH)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Release Time</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {transactions.map((tx) => (
+                        <tr key={tx.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tx.id}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{`${tx.beneficiary.slice(0, 6)}...${tx.beneficiary.slice(-4)}`}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.amount}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.releaseTime.toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTransactionStatus(tx) === "Executed" ? "bg-green-100 text-green-800" :
+                                    getTransactionStatus(tx) === "Cancelled" ? "bg-red-100 text-red-800" :
+                                        getTransactionStatus(tx) === "Pending" ? "bg-yellow-100 text-yellow-800" :
+                                            "bg-blue-100 text-blue-800"
+                                    }`}>
+                                    {getTransactionStatus(tx)}
+                                </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onClick={() => handleAction('approve', tx.id)} className="text-blue-600 hover:text-blue-900 mr-2">
+                                    <Check size={16} />
+                                </button>
+                                <button onClick={() => handleAction('cancel', tx.id)} className="text-red-600 hover:text-red-900 mr-2">
+                                    <Trash2 size={16} />
+                                </button>
+                                <button onClick={() => handleAction('execute', tx.id)} className="text-green-600 hover:text-green-900 mr-2">
+                                    <PlayCircle size={16} />
+                                </button>
+                                <button onClick={() => { setSelectedTransaction(tx); setActiveTab('modify'); }} className="text-yellow-600 hover:text-yellow-900">
+                                    <Edit size={16} />
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 
-    const handleCancelTransaction = async () => {
-        try {
-            if (isNaN(cancelTransactionId)) {
-                throw new Error("Transaction ID must be a number");
-            }
-            const tx = await timeLockContract.cancelTransaction(cancelTransactionId);
-            await tx.wait();
-            setCancelResult(`Transaction ID ${cancelTransactionId} canceled successfully. Hash: ${tx.hash.slice(0, 10)}...`);
-        } catch (error) {
-            setCancelResult(`Error: ${error.message}`);
-            if (error.data) {
-                setCancelResult(cancelResult + " " + error.data.data.reason);
-            }
-        }
-    };
-
-    const handleExecuteTransaction = async () => {
-        try {
-            if (isNaN(executeTransactionId)) {
-                throw new Error("Transaction ID must be a number");
-            }
-            const transaction = await timeLockContract.viewTransaction(executeTransactionId);
-            const amount = transaction[2];
-            const tx = await timeLockContract.executeTransaction(executeTransactionId, { value: amount });
-            await tx.wait();
-            setExecuteResult(`Transaction ID ${executeTransactionId} executed successfully. Hash: ${tx.hash.slice(0, 10)}...`);
-        } catch (error) {
-            setExecuteResult(`Error: ${error.message}`);
-            if (error.data) {
-                setExecuteResult(executeResult + " " + error.data.data.reason);
-            }
-        }
-    };
-
-    return (
-        <div className="bg-white shadow-md rounded-lg p-6 mx-auto">
-            <h2 className="text-2xl font-bold mb-4">Transaction of Donations</h2>
-
-            <div className="mb-12">
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                    View All Donation History
-                </button>
-            </div>
-
-            <TransactionModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                transactions={userTransactions}
-                getTransactionStatus={getTransactionStatus}
-            />
-
+    const renderModifyForm = () => (
+        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h3 className="text-xl font-bold mb-4">Modify Transaction #{selectedTransaction?.id}</h3>
             <div className="mb-4">
-                <h3 className="text-xl font-semibold mb-2">Check if Signatory</h3>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newBeneficiary">
+                    New Beneficiary Address
+                </label>
                 <input
-                    type="text"
-                    value={signatoryAddress}
-                    onChange={(e) => setSignatoryAddress(e.target.value)}
-                    placeholder="Address"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button onClick={handleCheckSignatory} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Check</button>
-                {signatoryResult && <div className="mt-2 p-2 bg-gray-100 rounded">{signatoryResult}</div>}
-            </div>
-
-            <div className="mb-5">
-                <h3 className="text-xl font-semibold mb-2">View Donation Transaction</h3>
-                <input
-                    type="number"
-                    value={viewTransactionId}
-                    onChange={(e) => setViewTransactionId(e.target.value)}
-                    placeholder="Transaction ID"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button onClick={handleViewTransaction} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View</button>
-                {viewResult && <pre className="mt-2 p-2 bg-gray-100 rounded overflow-x-auto">{viewResult}</pre>}
-            </div>
-
-            <div className="mb-5">
-                <h3 className="text-xl font-semibold mb-2">Approve Donation Transaction</h3>
-                <input
-                    type="number"
-                    value={approveTransactionId}
-                    onChange={(e) => setApproveTransactionId(e.target.value)}
-                    placeholder="Transaction ID"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button onClick={handleApproveTransaction} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Approve</button>
-                {approveResult && <div className="mt-2 p-2 bg-gray-100 rounded">{approveResult}</div>}
-            </div>
-
-            <div className="mb-5">
-                <h3 className="text-xl font-semibold mb-2">Modify Donation Transaction</h3>
-                <input
-                    type="number"
-                    value={modifyTransactionId}
-                    onChange={(e) => setModifyTransactionId(e.target.value)}
-                    placeholder="Transaction ID"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <input
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="newBeneficiary"
                     type="text"
                     value={newBeneficiary}
                     onChange={(e) => setNewBeneficiary(e.target.value)}
-                    placeholder="New Beneficiary Address"
-                    className="w-full p-2 border rounded mb-2"
+                    placeholder="0x..."
                 />
+            </div>
+            <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newAmount">
+                    New Amount (ETH)
+                </label>
                 <input
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="newAmount"
                     type="number"
+                    step="0.01"
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
-                    placeholder="New Amount (ETH)"
-                    className="w-full p-2 border rounded mb-2"
+                    placeholder="0.00"
                 />
+            </div>
+            <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newReleaseTime">
+                    New Release Time
+                </label>
                 <input
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="newReleaseTime"
                     type="datetime-local"
                     value={newReleaseTime}
                     onChange={(e) => setNewReleaseTime(e.target.value)}
-                    className="w-full p-2 border rounded mb-2"
                 />
-                <button onClick={handleModifyTransaction} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Modify</button>
-                {modifyResult && <div className="mt-2 p-2 bg-gray-100 rounded">{modifyResult}</div>}
             </div>
+            <div className="flex items-center justify-between">
+                <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                    onClick={() => handleAction('modify', selectedTransaction.id)}
+                >
+                    Modify Transaction
+                </button>
+                <button
+                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                    onClick={() => setActiveTab('view')}
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    );
 
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <h2 className="text-3xl font-bold mb-6">Transaction Manager</h2>
             <div className="mb-4">
-                <h3 className="text-xl font-semibold mb-2">Cancel Donation Transaction</h3>
-                <input
-                    type="number"
-                    value={cancelTransactionId}
-                    onChange={(e) => setCancelTransactionId(e.target.value)}
-                    placeholder="Transaction ID"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button onClick={handleCancelTransaction} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Cancel</button>
-                {cancelResult && <div className="mt-2 p-2 bg-gray-100 rounded">{cancelResult}</div>}
+                <button
+                    className={`mr-2 ${activeTab === 'view' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+                    onClick={() => setActiveTab('view')}
+                >
+                    View Transactions
+                </button>
+                <button
+                    className={`${activeTab === 'modify' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+                    onClick={() => setActiveTab('modify')}
+                    disabled={!selectedTransaction}
+                >
+                    Modify Transaction
+                </button>
             </div>
-
-            <div className="mb-4">
-                <h3 className="text-xl font-semibold mb-2">Execute Donation Transaction</h3>
-                <input
-                    type="number"
-                    value={executeTransactionId}
-                    onChange={(e) => setExecuteTransactionId(e.target.value)}
-                    placeholder="Transaction ID"
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button onClick={handleExecuteTransaction} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Execute</button>
-                {executeResult && <div className="mt-2 p-2 bg-gray-100 rounded">{executeResult}</div>}
-            </div>
+            {loading && <div className="text-center">Loading...</div>}
+            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">{error}</div>}
+            {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">{success}</div>}
+            {activeTab === 'view' ? renderTransactionList() : renderModifyForm()}
         </div>
     );
 };

@@ -71,6 +71,7 @@ function App() {
             <AdminDashboard
               authManagerContract={userState.authManagerContract}
               adminAddress={userState.address}
+              onDisconnect={disconnectWallet}
             />
           ) : (
             <Navigate to="/" replace />
