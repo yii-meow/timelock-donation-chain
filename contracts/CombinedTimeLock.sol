@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+interface IAuthManager {
+    function isCharityApproved(
+        address _charityAddress
+    ) external view returns (bool);
+    function isUserActive(address _userAddress) external view returns (bool);
+}
+
 contract CombinedTimeLock {
+    IAuthManager public authManager;
+
     enum TransactionType {
         Scheduled,
         Instant,
@@ -72,7 +81,8 @@ contract CombinedTimeLock {
     constructor(
         address[] memory _signatories,
         uint _delay,
-        uint _requiredSignatures
+        uint _requiredSignatures,
+        address _authManagerAddress
     ) {
         require(
             _requiredSignatures <= _signatories.length,
@@ -82,6 +92,7 @@ contract CombinedTimeLock {
         signatories = _signatories;
         delay = _delay;
         requiredSignatures = _requiredSignatures;
+        authManager = IAuthManager(_authManagerAddress);
     }
 
     function isSignatory(address _addr) public view returns (bool) {
@@ -126,6 +137,14 @@ contract CombinedTimeLock {
         uint256 amount,
         uint256 releaseTime
     ) external returns (uint256) {
+        require(
+            authManager.isUserActive(msg.sender),
+            "Sender is not an active user"
+        );
+        require(
+            authManager.isCharityApproved(beneficiary),
+            "Beneficiary is not an approved charity"
+        );
         require(beneficiary != address(0), "Invalid beneficiary address");
         require(amount > 0, "Amount must be greater than zero");
         require(
@@ -160,6 +179,14 @@ contract CombinedTimeLock {
         address beneficiary,
         uint256 amount
     ) external returns (uint256) {
+        require(
+            authManager.isUserActive(msg.sender),
+            "Sender is not an active user"
+        );
+        require(
+            authManager.isCharityApproved(beneficiary),
+            "Beneficiary is not an approved charity"
+        );
         require(beneficiary != address(0), "Invalid beneficiary address");
         require(amount > 0, "Amount must be greater than zero");
 
@@ -187,6 +214,10 @@ contract CombinedTimeLock {
 
     // Approve a transaction (instant, scheduled, modification, or cancellation)
     function approveTransaction(uint256 transactionId) external onlySignatory {
+        require(
+            authManager.isUserActive(msg.sender),
+            "Sender is not an active user"
+        );
         require(
             !transactions[transactionId].executed,
             "Transaction already executed"

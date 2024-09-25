@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_MANAGER_ABI } from '../abis/AuthManager';
+import { COMBINED_TIMELOCK_ABI } from '../abis/CombinedTimeLockABI';
 import Logo from '../Logo';
 
 const AUTH_MANAGER_ADDRESS = process.env.REACT_APP_AUTH_MANAGER_ADDRESS;
+const COMBINED_TIMELOCK_ADDRESS = process.env.REACT_APP_COMBINED_TIMELOCK_ADDRESS;
 
 const MainPage = ({ setUserState, userState, disconnectWallet }) => {
     const navigate = useNavigate();
@@ -89,6 +91,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(AUTH_MANAGER_ADDRESS, AUTH_MANAGER_ABI, signer);
+            const timeLockContract = new ethers.Contract(COMBINED_TIMELOCK_ADDRESS, COMBINED_TIMELOCK_ABI, signer);
 
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
@@ -96,6 +99,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             setUserState({
                 address: selectedAddress,
                 authManagerContract: authManagerContract,
+                timeLockContract: timeLockContract,
                 isConnected: true,
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,

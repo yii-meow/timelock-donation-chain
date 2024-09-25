@@ -109,7 +109,7 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                     />
                 )}
                 {activeTab === 'charities' && <CharityList authManagerContract={userState.authManagerContract} />}
-                {activeTab === 'donate' && <DonationForm address={userState.address} authManagerContract={userState.authManagerContract} />}
+                {activeTab === 'donate' && <DonationForm address={userState.address} authManagerContract={userState.authManagerContract} timeLockContract={userState.timeLockContract} />}
             </main>
         </div>
     );

@@ -9,6 +9,7 @@ function App() {
   const [userState, setUserState] = useState({
     address: '',
     authManagerContract: null,
+    timeLockContract: null,
     isConnected: false,
     isUser: false,
     isCharity: false,
@@ -18,6 +19,7 @@ function App() {
     setUserState({
       address: '',
       authManagerContract: null,
+      timeLockContract: null,
       isConnected: false,
       isUser: false,
       isCharity: false,
@@ -29,8 +31,8 @@ function App() {
       <Routes>
         <Route path="/" element={
           <MainPage
-            setUserState={setUserState}
             userState={userState}
+            setUserState={setUserState}
             disconnectWallet={disconnectWallet}
           />
         } />

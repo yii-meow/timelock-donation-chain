@@ -26,6 +26,7 @@ contract AuthManager {
     mapping(address => CharityDetails) private charities;
     address public admin;
     address[] private allUsers;
+    address[] private allCharities;
 
     string[] public categories = [
         "Education",
@@ -129,11 +130,13 @@ contract AuthManager {
             walletAddress: _walletAddress,
             registrationDate: block.timestamp,
             exists: true,
-            isApproved: false,
+            isApproved: true, //todo: change to false, and let admin verify
             isActive: true,
             category: _category,
             tags: _tags
         });
+
+        allCharities.push(msg.sender);
 
         emit CharityRegistered(
             msg.sender,
@@ -270,9 +273,11 @@ contract AuthManager {
     }
 
     function isCharityApproved(
-        address charityAddress
+        address _charityAddress
     ) public view returns (bool) {
-        return charities[charityAddress].isApproved;
+        return
+            charities[_charityAddress].exists &&
+            charities[_charityAddress].isApproved;
     }
 
     function getUserNameByAddress(
@@ -283,12 +288,16 @@ contract AuthManager {
     }
 
     // Add this new function to check if a user is active
-    function isUserActive(address userAddress) public view returns (bool) {
-        require(users[userAddress].exists, "User not registered");
-        return users[userAddress].isActive;
+    function isUserActive(address _userAddress) public view returns (bool) {
+        require(users[_userAddress].exists, "User not registered");
+        return users[_userAddress].isActive;
     }
 
     function getAllUsers() public view returns (address[] memory) {
         return allUsers;
+    }
+
+    function getAllCharities() public view returns (address[] memory) {
+        return allCharities;
     }
 }

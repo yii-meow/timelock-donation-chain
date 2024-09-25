@@ -3,9 +3,12 @@ const ChatApp = artifacts.require("./ChatApp.sol");
 const CombinedTimeLock = artifacts.require("./CombinedTimeLock.sol");
 
 module.exports = function (deployer, network, accounts) {
+  let authManagerInstance;
+
   deployer.deploy(AuthManager)
     .then(() => AuthManager.deployed())
-    .then((authManagerInstance) => {
+    .then((instance) => {
+      authManagerInstance = instance;
       // Deploy ChatApp with AuthManager address
       return deployer.deploy(ChatApp, authManagerInstance.address);
     })
@@ -15,6 +18,6 @@ module.exports = function (deployer, network, accounts) {
       const delay = 3600; // 1 hour delay (in seconds)
       const requiredSignatures = 2;
 
-      return deployer.deploy(CombinedTimeLock, signatories, delay, requiredSignatures);
+      return deployer.deploy(CombinedTimeLock, signatories, delay, requiredSignatures, authManagerInstance.address);
     });
 };
