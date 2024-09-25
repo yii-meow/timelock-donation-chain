@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import TransactionModal from "./TransactionModal";
 
-const TransactionManager = ({ timeLockContract }) => {
+const TransactionManager = ({ timeLockContract, userAddress }) => {
     const [signatoryAddress, setSignatoryAddress] = useState('');
     const [viewTransactionId, setViewTransactionId] = useState('');
     const [approveTransactionId, setApproveTransactionId] = useState('');
@@ -18,6 +19,66 @@ const TransactionManager = ({ timeLockContract }) => {
     const [modifyResult, setModifyResult] = useState('');
     const [cancelResult, setCancelResult] = useState('');
     const [executeResult, setExecuteResult] = useState('');
+
+    const [userTransactions, setUserTransactions] = useState([]);
+    const [transactionCount, setTransactionCount] = useState(0);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        fetchTransactionCount();
+    }, []);
+
+    useEffect(() => {
+        if (transactionCount > 0) {
+            fetchUserTransactions();
+        }
+    }, [transactionCount]);
+
+    const fetchTransactionCount = async () => {
+        try {
+            const count = await timeLockContract.transactionCount();
+            setTransactionCount(count.toNumber());
+        } catch (error) {
+            console.error("Error fetching transaction count:", error);
+        }
+    };
+
+    const fetchUserTransactions = async () => {
+        try {
+            const transactions = [];
+            for (let i = 1; i <= transactionCount; i++) {
+                const tx = await timeLockContract.transactions(i)
+                const normalizedUserAddress = userAddress.toLowerCase();
+                const normalizedCreator = tx.creator.toLowerCase();
+                const normalizedBeneficiary = tx.beneficiary.toLowerCase();
+
+                if (normalizedCreator === normalizedUserAddress || normalizedBeneficiary === normalizedUserAddress) {
+                    const details = await timeLockContract.viewTransaction(i);
+                    transactions.push({
+                        id: i,
+                        type: details[0],
+                        beneficiary: details[1],
+                        amount: ethers.utils.formatEther(details[2]),
+                        releaseTime: new Date(details[3].toNumber() * 1000),
+                        executed: details[4],
+                        approvals: details[5].toNumber(),
+                        modified: details[6]
+                    });
+                }
+            }
+            setUserTransactions(transactions);
+        } catch (error) {
+            console.error("Error fetching user transactions:", error);
+        }
+    };
+
+    const getTransactionStatus = (transaction) => {
+        if (transaction.executed) return "Executed";
+        if (transaction.type === 3) return "Cancelled"; // Assuming 3 is the value for Cancelled in the enum
+        if (transaction.releaseTime > new Date()) return "Pending";
+        return "Ready for Execution";
+    };
 
     const handleCheckSignatory = async () => {
         try {
@@ -132,6 +193,22 @@ const TransactionManager = ({ timeLockContract }) => {
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mx-auto">
             <h2 className="text-2xl font-bold mb-4">Transaction of Donations</h2>
+
+            <div className="mb-12">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                    View All Donation History
+                </button>
+            </div>
+
+            <TransactionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                transactions={userTransactions}
+                getTransactionStatus={getTransactionStatus}
+            />
 
             <div className="mb-4">
                 <h3 className="text-xl font-semibold mb-2">Check if Signatory</h3>

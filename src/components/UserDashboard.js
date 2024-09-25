@@ -126,6 +126,7 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                 {activeTab === 'transactions' && (
                     <TransactionManager
                         timeLockContract={userState.timeLockContract}
+                        userAddress={userState.address}
                     />
                 )}
             </main>
