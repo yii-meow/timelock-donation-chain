@@ -7,10 +7,27 @@ const CharityList = ({ authManagerContract }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [categoryNames, setCategoryNames] = useState({});
 
     useEffect(() => {
         fetchCharities();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const categoryCount = await authManagerContract.getCategoryCount();
+            const categories = {};
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await authManagerContract.getCategoryName(i);
+                categories[i] = categoryName;
+            }
+            setCategoryNames(categories);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            setError("Failed to fetch categories. Please try again later.");
+        }
+    };
 
     const fetchCharities = async () => {
         setIsLoading(true);
@@ -22,13 +39,12 @@ const CharityList = ({ authManagerContract }) => {
                     const details = await authManagerContract.getCharityDetails(address);
                     return {
                         address,
-                        name: details.name,
-                        description: details.description,
-                        isApproved: details.isApproved,
-                        // Adding placeholder data for demonstration
-                        category: details.category || 'General',
-                        totalDonations: ethers.utils.formatEther(details.totalDonations || '0'),
-                        website: details.website || '#'
+                        name: details[0],
+                        description: details[1],
+                        isApproved: details[4],
+                        category: details[6],
+                        totalDonations: ethers.utils.formatEther('0'), // Placeholder as it's not in your contract
+                        website: '#' // Placeholder as it's not in your contract
                     };
                 })
             );
@@ -44,7 +60,7 @@ const CharityList = ({ authManagerContract }) => {
     const filteredCharities = charities.filter(charity =>
         charity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         charity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        charity.category.toLowerCase().includes(searchTerm.toLowerCase())
+        (categoryNames[charity.category] && categoryNames[charity.category].toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (isLoading) {
@@ -87,7 +103,7 @@ const CharityList = ({ authManagerContract }) => {
                         <div key={charity.address} className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-300 hover:scale-105">
                             <div className="bg-blue-500 text-white p-4">
                                 <h3 className="text-xl font-semibold mb-1">{charity.name}</h3>
-                                <p className="text-sm">{charity.category}</p>
+                                <p className="text-sm">{categoryNames[charity.category] || 'Unknown Category'}</p>
                             </div>
                             <div className="p-4">
                                 <p className="text-gray-600 mb-4">Description: {charity.description}</p>

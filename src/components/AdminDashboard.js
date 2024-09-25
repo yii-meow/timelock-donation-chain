@@ -10,10 +10,27 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
     const [filterStatus, setFilterStatus] = useState('all');
     const [sortBy, setSortBy] = useState('name');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [categoryNames, setCategoryNames] = useState({});
 
     useEffect(() => {
         fetchCharities();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const categoryCount = await authManagerContract.getCategoryCount();
+            const categories = {};
+            for (let i = 0; i < categoryCount; i++) {
+                const categoryName = await authManagerContract.getCategoryName(i);
+                categories[i] = categoryName;
+            }
+            setCategoryNames(categories);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            setError("Failed to fetch categories. Please try again.");
+        }
+    };
 
     const fetchCharities = async () => {
         try {
@@ -24,12 +41,12 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
                     const details = await authManagerContract.getCharityDetails(address);
                     return {
                         address,
-                        name: details.name,
-                        description: details.description,
-                        isApproved: details.isApproved,
-                        isActive: details.isActive,
-                        category: details.category,
-                        tags: details.tags
+                        name: details[0],
+                        description: details[1],
+                        isApproved: details[4],
+                        isActive: details[5],
+                        category: details[6],
+                        tags: details[7]
                     };
                 })
             );
@@ -59,7 +76,7 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
     };
 
     const filteredAndSortedCharities = charities
-        .filter(charity =>
+        .filter(charity => 
             charity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             charity.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -173,7 +190,7 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
                                 </div>
                                 <div className="flex items-center mb-4">
                                     <Briefcase className="text-blue-500 mr-2" size={18} />
-                                    <span className="text-sm">{charity.category}</span>
+                                    <span className="text-sm">{categoryNames[charity.category] || 'Unknown Category'}</span>
                                 </div>
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {charity.tags.map((tag, index) => (
@@ -194,10 +211,11 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
                                 </div>
                                 <button
                                     onClick={() => handleApproval(charity.address, !charity.isApproved)}
-                                    className={`w-full ${charity.isApproved
-                                        ? 'bg-red-500 hover:bg-red-600'
-                                        : 'bg-green-500 hover:bg-green-600'
-                                        } text-white font-bold py-2 px-4 rounded transition duration-300`}
+                                    className={`w-full ${
+                                        charity.isApproved
+                                            ? 'bg-red-500 hover:bg-red-600'
+                                            : 'bg-green-500 hover:bg-green-600'
+                                    } text-white font-bold py-2 px-4 rounded transition duration-300`}
                                 >
                                     {charity.isApproved ? 'Disapprove' : 'Approve'}
                                 </button>
