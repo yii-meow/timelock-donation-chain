@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import CharityList from './CharityList';
 import DonationForm from './DonationForm';
+import TransactionManager from './TransactionManager';
 import { ethers } from 'ethers';
 
 const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
@@ -22,10 +23,8 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
 
     const handleAccountsChanged = async (accounts) => {
         if (accounts.length === 0) {
-            // MetaMask is locked or the user has not connected any accounts
             onDisconnect();
         } else if (accounts[0] !== userState.address) {
-            // User has switched accounts
             await selectAddress(accounts[0]);
         }
     };
@@ -35,14 +34,16 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(userState.authManagerContract.address, userState.authManagerContract.interface, signer);
+            const timeLockContract = new ethers.Contract(userState.timeLockContract.address, userState.timeLockContract.interface, signer);
 
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
 
             setUserState({
+                ...userState,
                 address: selectedAddress,
                 authManagerContract: authManagerContract,
-                isConnected: true,
+                timeLockContract: timeLockContract,
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
             });
@@ -81,6 +82,12 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                             >
                                 Donate
                             </button>
+                            <button
+                                onClick={() => setActiveTab('transactions')}
+                                className={`py-2 px-4 rounded ${activeTab === 'transactions' ? 'bg-blue-700' : ''}`}
+                            >
+                                Transactions
+                            </button>
                             <Link
                                 to="/chat/allusers"
                                 className="py-2 px-4 rounded bg-green-500 hover:bg-green-600"
@@ -89,7 +96,8 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                             </Link>
                             <button
                                 onClick={onDisconnect}
-                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                className="bg-red-500 hover:bg-red-700
+                                text-white font-bold py-2 px-4 rounded"
                             >
                                 Disconnect
                             </button>
@@ -98,18 +106,28 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                 </div>
             </nav>
 
-
             <main className="container mx-auto px-4 py-8">
                 {activeTab === 'profile' && (
                     <UserProfile
                         userState={userState}
                         onStatusChange={(isActive) => {
-                            // You might want to update the global user state here
+                            setUserState(prevState => ({ ...prevState, isActive }));
                         }}
                     />
                 )}
                 {activeTab === 'charities' && <CharityList authManagerContract={userState.authManagerContract} />}
-                {activeTab === 'donate' && <DonationForm address={userState.address} authManagerContract={userState.authManagerContract} timeLockContract={userState.timeLockContract} />}
+                {activeTab === 'donate' && (
+                    <DonationForm
+                        address={userState.address}
+                        authManagerContract={userState.authManagerContract}
+                        timeLockContract={userState.timeLockContract}
+                    />
+                )}
+                {activeTab === 'transactions' && (
+                    <TransactionManager
+                        timeLockContract={userState.timeLockContract}
+                    />
+                )}
             </main>
         </div>
     );

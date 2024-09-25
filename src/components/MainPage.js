@@ -44,21 +44,21 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
         }
     }, [userState.isUser, userState.isCharity, navigate]);
 
-    const checkIfWalletIsConnected = async () => {
-        if (typeof window.ethereum !== 'undefined') {
-            try {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const accounts = await provider.listAccounts();
-                if (accounts.length > 0) {
-                    await connectWallet();
-                }
-            } catch (error) {
-                setError("Failed to connect to the wallet. Please try again.");
-            }
-        } else {
-            setError("Please install MetaMask to use this application.");
-        }
-    };
+    // const checkIfWalletIsConnected = async () => {
+    //     if (typeof window.ethereum !== 'undefined') {
+    //         try {
+    //             const provider = new ethers.providers.Web3Provider(window.ethereum);
+    //             const accounts = await provider.listAccounts();
+    //             if (accounts.length > 0) {
+    //                 await connectWallet();
+    //             }
+    //         } catch (error) {
+    //             setError("Failed to connect to the wallet. Please try again.");
+    //         }
+    //     } else {
+    //         setError("Please install MetaMask to use this application.");
+    //     }
+    // };
 
     const handleAccountsChanged = async (accounts) => {
         if (accounts.length === 0) {
@@ -95,6 +95,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
 
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
+            const isActive = isUserRegistered ? await authManagerContract.isUserActive(selectedAddress) : true;
 
             setUserState({
                 address: selectedAddress,
@@ -103,6 +104,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                 isConnected: true,
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
+                isActive: isActive,
             });
 
             if (isUserRegistered) {

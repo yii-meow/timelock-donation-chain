@@ -20,7 +20,6 @@ const DonationForm = ({ address, authManagerContract, timeLockContract }) => {
     const fetchApprovedCharities = async () => {
         try {
             const allCharities = await authManagerContract.getAllCharities();
-            console.log(allCharities);
             const approvedCharities = [];
             for (let charity of allCharities) {
                 const isCharity = await authManagerContract.isCharityRegistered(charity);
