@@ -52,6 +52,7 @@ contract AuthManager {
         string[] tags
     );
     event CharityApproved(address indexed charityAddress);
+    event CharityDisapproved(address indexed charityAddress);
     event UserUpdated(address indexed userAddress, string name, string email);
     event CharityUpdated(
         address indexed charityAddress,
@@ -204,6 +205,17 @@ contract AuthManager {
 
         charities[_charityAddress].isApproved = true;
         emit CharityApproved(_charityAddress);
+    }
+
+    function disApproveCharity(address _charityAddress) public onlyAdmin {
+        require(charities[_charityAddress].exists, "Charity not registered");
+        require(
+            charities[_charityAddress].isApproved,
+            "Charity not yet approved"
+        );
+
+        charities[_charityAddress].isApproved = false;
+        emit CharityDisapproved(_charityAddress);
     }
 
     function getUserDetails()

@@ -40,6 +40,19 @@ export const AUTH_MANAGER_ABI = [
                 "type": "address"
             }
         ],
+        "name": "CharityDisapproved",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "charityAddress",
+                "type": "address"
+            }
+        ],
         "name": "CharityReactivated",
         "type": "event"
     },
@@ -204,8 +217,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -224,8 +236,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -366,6 +377,19 @@ export const AUTH_MANAGER_ABI = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_charityAddress",
+                "type": "address"
+            }
+        ],
+        "name": "disApproveCharity",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "getUserDetails",
         "outputs": [
@@ -391,8 +415,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -446,8 +469,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -466,8 +488,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -480,8 +501,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -500,8 +520,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -520,8 +539,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -540,8 +558,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -560,8 +577,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -580,8 +596,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -594,8 +609,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -608,8 +622,7 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -628,7 +641,6 @@ export const AUTH_MANAGER_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     }
 ];

@@ -5,6 +5,7 @@ import CharityList from './CharityList';
 import DonationForm from './DonationForm';
 import TransactionManager from './TransactionManager';
 import { ethers } from 'ethers';
+import { User, Heart, DollarSign, List, MessageSquare, LogOut } from 'lucide-react';
 
 const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
     const [activeTab, setActiveTab] = useState('profile');
@@ -58,48 +59,45 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="bg-blue-600 text-white">
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+            <nav className="bg-blue-600 text-white shadow-lg">
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center py-4">
-                        <div className="text-xl font-bold">User Dashboard</div>
-                        <div className="flex space-x-4 items-center">
-                            <button
-                                onClick={() => setActiveTab('profile')}
-                                className={`py-2 px-4 rounded ${activeTab === 'profile' ? 'bg-blue-700' : ''}`}
-                            >
-                                Profile
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('charities')}
-                                className={`py-2 px-4 rounded ${activeTab === 'charities' ? 'bg-blue-700' : ''}`}
-                            >
-                                Charities List
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('donate')}
-                                className={`py-2 px-4 rounded ${activeTab === 'donate' ? 'bg-blue-700' : ''}`}
-                            >
-                                Donate
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('transactions')}
-                                className={`py-2 px-4 rounded ${activeTab === 'transactions' ? 'bg-blue-700' : ''}`}
-                            >
-                                Transactions
-                            </button>
+                        <div className="text-2xl font-bold flex items-center">
+                            <User className="mr-2" /> User Dashboard
+                        </div>
+                        <div className="flex space-x-2 items-center">
+                            {[
+                                { icon: <User />, label: 'Profile', tab: 'profile' },
+                                { icon: <Heart />, label: 'Charities', tab: 'charities' },
+                                { icon: <DollarSign />, label: 'Donate', tab: 'donate' },
+                                { icon: <List />, label: 'Transactions', tab: 'transactions' },
+                            ].map(({ icon, label, tab }) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`flex items-center py-2 px-4 rounded transition duration-300 ${activeTab === tab
+                                            ? 'bg-white text-blue-600'
+                                            : 'hover:bg-blue-700'
+                                        }`}
+                                >
+                                    {icon}
+                                    <span className="ml-2 hidden md:inline">{label}</span>
+                                </button>
+                            ))}
                             <Link
                                 to="/chat/allusers"
-                                className="py-2 px-4 rounded bg-green-500 hover:bg-green-600"
+                                className="flex items-center py-2 px-4 rounded bg-green-500 hover:bg-green-600 transition duration-300"
                             >
-                                Chat
+                                <MessageSquare />
+                                <span className="ml-2 hidden md:inline">Chat</span>
                             </Link>
                             <button
                                 onClick={onDisconnect}
-                                className="bg-red-500 hover:bg-red-700
-                                text-white font-bold py-2 px-4 rounded"
+                                className="flex items-center py-2 px-4 rounded bg-red-500 hover:bg-red-600 transition duration-300"
                             >
-                                Disconnect
+                                <LogOut />
+                                <span className="ml-2 hidden md:inline">Disconnect</span>
                             </button>
                         </div>
                     </div>
@@ -107,28 +105,30 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
             </nav>
 
             <main className="container mx-auto px-4 py-8">
-                {activeTab === 'profile' && (
-                    <UserProfile
-                        userState={userState}
-                        onStatusChange={(isActive) => {
-                            setUserState(prevState => ({ ...prevState, isActive }));
-                        }}
-                    />
-                )}
-                {activeTab === 'charities' && <CharityList authManagerContract={userState.authManagerContract} />}
-                {activeTab === 'donate' && (
-                    <DonationForm
-                        address={userState.address}
-                        authManagerContract={userState.authManagerContract}
-                        timeLockContract={userState.timeLockContract}
-                    />
-                )}
-                {activeTab === 'transactions' && (
-                    <TransactionManager
-                        timeLockContract={userState.timeLockContract}
-                        userAddress={userState.address}
-                    />
-                )}
+                <div className="bg-white shadow-lg rounded-lg p-6">
+                    {activeTab === 'profile' && (
+                        <UserProfile
+                            userState={userState}
+                            onStatusChange={(isActive) => {
+                                setUserState(prevState => ({ ...prevState, isActive }));
+                            }}
+                        />
+                    )}
+                    {activeTab === 'charities' && <CharityList authManagerContract={userState.authManagerContract} />}
+                    {activeTab === 'donate' && (
+                        <DonationForm
+                            address={userState.address}
+                            authManagerContract={userState.authManagerContract}
+                            timeLockContract={userState.timeLockContract}
+                        />
+                    )}
+                    {activeTab === 'transactions' && (
+                        <TransactionManager
+                            timeLockContract={userState.timeLockContract}
+                            userAddress={userState.address}
+                        />
+                    )}
+                </div>
             </main>
         </div>
     );

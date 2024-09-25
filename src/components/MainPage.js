@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_MANAGER_ABI } from '../abis/AuthManager';
 import { COMBINED_TIMELOCK_ABI } from '../abis/CombinedTimeLockABI';
-import Logo from '../Logo';
+import { Heart, Users, DollarSign, AlertCircle } from 'lucide-react';
 
 const AUTH_MANAGER_ADDRESS = process.env.REACT_APP_AUTH_MANAGER_ADDRESS;
 const COMBINED_TIMELOCK_ADDRESS = process.env.REACT_APP_COMBINED_TIMELOCK_ADDRESS;
@@ -191,23 +191,25 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="bg-blue-600 text-white">
+        <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
+            <nav className="bg-blue-600 text-white shadow-lg">
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center py-4">
-                        <div className="text-xl font-bold">DonationChain</div>
+                        <div className="text-2xl font-bold flex items-center">
+                            <Heart className="mr-2" /> DonationChain
+                        </div>
                         {!userState.isConnected ? (
-                            <button onClick={connectWallet} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
+                            <button onClick={connectWallet} className="bg-white text-blue-600 font-semibold py-2 px-6 rounded-full hover:bg-blue-100 transition duration-300">
                                 Connect Wallet
                             </button>
                         ) : (
                             <div className="flex items-center space-x-4">
                                 {!userState.isUser && !userState.isCharity && !userState.isAdmin && (
-                                    <button onClick={() => setShowRegistrationForm(true)} className="bg-white text-blue-600 font-semibold py-2 px-4 rounded">
+                                    <button onClick={() => setShowRegistrationForm(true)} className="bg-green-500 text-white font-semibold py-2 px-6 rounded-full hover:bg-green-600 transition duration-300">
                                         Register
                                     </button>
                                 )}
-                                <button onClick={disconnectWallet} className="bg-red-500 text-white font-semibold py-2 px-4 rounded">
+                                <button onClick={disconnectWallet} className="bg-red-500 text-white font-semibold py-2 px-6 rounded-full hover:bg-red-600 transition duration-300">
                                     Disconnect
                                 </button>
                             </div>
@@ -216,52 +218,77 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                 </div>
             </nav>
 
-            <main className="container mx-auto px-4 py-8">
-                <h1 className="text-4xl font-bold text-center mb-8">Welcome to Donation Chain</h1>
-                <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl mx-auto">
-                    <p className="text-gray-600 mb-4">
-                        DonationChain is a decentralized platform that connects donors with verified charities. Make secure, transparent donations using blockchain technology.
-                    </p>
+            <main className="container mx-auto px-4 py-12">
+                <h1 className="text-5xl font-bold text-center mb-8 text-blue-800">Welcome to DonationChain</h1>
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white shadow-xl rounded-lg p-8 mb-8">
+                        <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+                            DonationChain is a revolutionary decentralized platform that connects compassionate donors with verified charities. Make secure, transparent donations using blockchain technology and be part of a global movement for positive change.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                            <div className="bg-blue-50 p-6 rounded-lg text-center">
+                                <Users className="mx-auto mb-4 text-blue-600" size={48} />
+                                <h3 className="text-xl font-semibold mb-2">Connect</h3>
+                                <p>Join a community of like-minded individuals passionate about making a difference.</p>
+                            </div>
+                            <div className="bg-green-50 p-6 rounded-lg text-center">
+                                <Heart className="mx-auto mb-4 text-green-600" size={48} />
+                                <h3 className="text-xl font-semibold mb-2">Support</h3>
+                                <p>Choose from a variety of verified charities and causes that resonate with you.</p>
+                            </div>
+                            <div className="bg-yellow-50 p-6 rounded-lg text-center">
+                                <DollarSign className="mx-auto mb-4 text-yellow-600" size={48} />
+                                <h3 className="text-xl font-semibold mb-2">Track</h3>
+                                <p>Monitor your donations and see the real-world impact of your generosity.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     {userState.isConnected ? (
-                        <>
-                            <p className="font-semibold">Connected Address: {userState.address}</p>
+                        <div className="bg-white shadow-lg rounded-lg p-6">
+                            <p className="font-semibold text-lg mb-2">Connected Address:</p>
+                            <p className="bg-gray-100 p-3 rounded-md break-all">{userState.address}</p>
                             {!userState.isUser && !userState.isCharity && (
-                                <div className="p-4 mb-2 text-sm text-red-800 rounded-lg bg-red-50 dark:text-red-400 mt-5" role="alert">
-                                    You are not registered yet!
+                                <div className="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700" role="alert">
+                                    <p className="font-bold">Not Registered</p>
+                                    <p>You're not registered yet. Click the 'Register' button to get started!</p>
                                 </div>
                             )}
-                        </>
+                        </div>
                     ) : (
-                        <p className="text-yellow-600">Please connect your wallet to get started.</p>
+                        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
+                            <p className="font-bold">Get Started</p>
+                            <p>Please connect your wallet to start making a difference today!</p>
+                        </div>
                     )}
                 </div>
 
                 {showRegistrationForm && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="registration-modal">
-                        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Register as a User or Charity</h3>
-                            <div className="mb-4">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center" id="registration-modal">
+                        <div className="relative p-8 border w-full max-w-md m-4 shadow-lg rounded-lg bg-white">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-6">Join DonationChain</h3>
+                            <div className="mb-6">
                                 <button
                                     onClick={() => setRegistrationType('user')}
-                                    className={`mr-2 px-4 py-2 rounded ${registrationType === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                                    className={`mr-4 px-6 py-2 rounded-full text-lg ${registrationType === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition duration-300`}
                                 >
-                                    User
+                                    Donor
                                 </button>
                                 <button
                                     onClick={() => setRegistrationType('charity')}
-                                    className={`px-4 py-2 rounded ${registrationType === 'charity' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                                    className={`px-6 py-2 rounded-full text-lg ${registrationType === 'charity' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} transition duration-300`}
                                 >
                                     Charity
                                 </button>
                             </div>
-                            <form onSubmit={handleRegister}>
+                            <form onSubmit={handleRegister} className="space-y-4">
                                 <input
                                     type="text"
                                     name="name"
                                     value={registrationData.name}
                                     onChange={handleInputChange}
                                     placeholder="Name"
-                                    className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
                                 {registrationType === 'user' && (
@@ -271,26 +298,26 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                                         value={registrationData.email}
                                         onChange={handleInputChange}
                                         placeholder="Email"
-                                        className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
                                     />
                                 )}
                                 {registrationType === 'charity' && (
                                     <>
-                                        <input
-                                            type="text"
+                                        <textarea
                                             name="description"
                                             value={registrationData.description}
                                             onChange={handleInputChange}
                                             placeholder="Description"
-                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
+                                            rows="3"
                                         />
                                         <select
                                             name="category"
                                             value={selectedCategory}
                                             onChange={handleInputChange}
-                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         >
                                             {categories.map((category, index) => (
@@ -303,29 +330,59 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                                             value={tags}
                                             onChange={handleInputChange}
                                             placeholder="Tags (comma-separated)"
-                                            className="mt-2 px-3 py-2 bg-white border shadow-sm border-slate-300 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-sky-500 block w-full rounded-md sm:text-sm focus:ring-1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </>
                                 )}
-                                <div className="mt-4">
+                                <div className="flex space-x-4">
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        className="w-full px-6 py-3 bg-blue-500 text-white text-lg font-semibold rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-300"
                                     >
                                         Register
                                     </button>
+                                    <button
+                                        onClick={() => setShowRegistrationForm(false)}
+                                        className="w-full px-6 py-3 bg-gray-200 text-gray-800 text-lg font-semibold rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition duration-300"
+                                    >
+                                        Cancel
+                                    </button>
                                 </div>
                             </form>
-                            <button
-                                onClick={() => setShowRegistrationForm(false)}
-                                className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                            >
-                                Close
-                            </button>
                         </div>
                     </div>
                 )}
             </main>
+
+            <footer className="bg-gray-800 text-white py-8">
+                <div className="container mx-auto px-4">
+                    <div className="flex flex-wrap justify-between items-center">
+                        <div className="w-full md:w-1/3 text-center md:text-left mb-6 md:mb-0">
+                            <h2 className="text-2xl font-bold mb-2">DonationChain</h2>
+                            <p>Empowering generosity through blockchain technology</p>
+                        </div>
+                        <div className="w-full md:w-1/3 text-center mb-6 md:mb-0">
+                            <h3 className="text-lg font-semibold mb-2">Quick Links</h3>
+                            <ul>
+                                <li><a href="#" className="hover:text-blue-300">About Us</a></li>
+                                <li><a href="#" className="hover:text-blue-300">How It Works</a></li>
+                                <li><a href="#" className="hover:text-blue-300">FAQs</a></li>
+                            </ul>
+                        </div>
+                        <div className="w-full md:w-1/3 text-center md:text-right">
+                            <h3 className="text-lg font-semibold mb-2">Connect With Us</h3>
+                            <div className="flex justify-center md:justify-end space-x-4">
+                                <a href="#" className="hover:text-blue-300"><i className="fab fa-twitter"></i></a>
+                                <a href="#" className="hover:text-blue-300"><i className="fab fa-facebook"></i></a>
+                                <a href="#" className="hover:text-blue-300"><i className="fab fa-instagram"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-8 text-center text-sm">
+                        <p>&copy; 2024 DonationChain. All rights reserved.</p>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
