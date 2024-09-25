@@ -114,7 +114,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             if (isAdmin) {
                 navigate('/admin-dashboard');
             }
-            if (isUserRegistered) {
+            else if (isUserRegistered) {
                 navigate('/dashboard');
             } else if (isCharityRegistered) {
                 navigate('/charity-dashboard');

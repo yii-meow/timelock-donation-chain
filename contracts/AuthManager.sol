@@ -130,7 +130,7 @@ contract AuthManager {
             walletAddress: _walletAddress,
             registrationDate: block.timestamp,
             exists: true,
-            isApproved: true, //todo: change to false, and let admin verify
+            isApproved: false,
             isActive: true,
             category: _category,
             tags: _tags
