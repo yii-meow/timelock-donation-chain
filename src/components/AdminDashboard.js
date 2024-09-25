@@ -195,8 +195,8 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
                                 <button
                                     onClick={() => handleApproval(charity.address, !charity.isApproved)}
                                     className={`w-full ${charity.isApproved
-                                            ? 'bg-red-500 hover:bg-red-600'
-                                            : 'bg-green-500 hover:bg-green-600'
+                                        ? 'bg-red-500 hover:bg-red-600'
+                                        : 'bg-green-500 hover:bg-green-600'
                                         } text-white font-bold py-2 px-4 rounded transition duration-300`}
                                 >
                                     {charity.isApproved ? 'Disapprove' : 'Approve'}

@@ -207,7 +207,7 @@ contract AuthManager {
         emit CharityApproved(_charityAddress);
     }
 
-    function disApproveCharity(address _charityAddress) public onlyAdmin {
+    function disapproveCharity(address _charityAddress) public onlyAdmin {
         require(charities[_charityAddress].exists, "Charity not registered");
         require(
             charities[_charityAddress].isApproved,

@@ -15,7 +15,7 @@ module.exports = function (deployer, network, accounts) {
     .then(() => {
       // Deploy CombinedTimeLock
       const signatories = [accounts[0], accounts[1], accounts[2]];
-      const delay = 3600; // 1 hour delay (in seconds)
+      const delay = 60; // 1 hour delay (in seconds)
       const requiredSignatures = 2;
 
       return deployer.deploy(CombinedTimeLock, signatories, delay, requiredSignatures, authManagerInstance.address);
