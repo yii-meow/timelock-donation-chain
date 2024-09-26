@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { Check, X, Eye, Edit, Trash2, PlayCircle, User, DollarSign, Clock, AlertTriangle, ThumbsUp } from 'lucide-react';
 
-const TransactionManager = ({ timeLockContract, userAddress }) => {
+const TransactionManager = ({ timeLockContract, userAddress, isSignatory }) => {
     const [transactions, setTransactions] = useState([]);
     const [transactionCount, setTransactionCount] = useState(0);
     const [activeTab, setActiveTab] = useState('view');
@@ -17,17 +17,7 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
     const [approvalTransactionId, setApprovalTransactionId] = useState('');
     const [approvalTransactionDetails, setApprovalTransactionDetails] = useState(null);
 
-    useEffect(() => {
-        fetchTransactionCount();
-    }, []);
-
-    useEffect(() => {
-        if (transactionCount > 0) {
-            fetchUserTransactions();
-        }
-    }, [transactionCount]);
-
-    const fetchTransactionCount = async () => {
+    const fetchTransactionCount = useCallback(async () => {
         try {
             const count = await timeLockContract.transactionCount();
             setTransactionCount(count.toNumber());
@@ -35,9 +25,9 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
             console.error("Error fetching transaction count:", error);
             setError("Failed to fetch transaction count. Please try again.");
         }
-    };
+    }, [timeLockContract]);
 
-    const fetchUserTransactions = async () => {
+    const fetchUserTransactions = useCallback(async () => {
         setLoading(true);
         try {
             const transactions = [];
@@ -64,7 +54,43 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [timeLockContract, userAddress, transactionCount]);
+
+
+    useEffect(() => {
+        fetchTransactionCount();
+    }, [fetchTransactionCount, userAddress]);
+
+    useEffect(() => {
+        if (transactionCount > 0) {
+            fetchUserTransactions();
+        }
+    }, [transactionCount, fetchUserTransactions, userAddress]);
+
+    useEffect(() => {
+        setTransactions([]);
+        setTransactionCount(0);
+    }, [userAddress]);
+
+    useEffect(() => {
+        const handleAccountsChanged = (accounts) => {
+            if (accounts.length > 0 && accounts[0] !== userAddress) {
+                // Address changed, refresh data
+                fetchTransactionCount();
+                fetchUserTransactions();
+            }
+        };
+
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+        }
+
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            }
+        };
+    }, [fetchTransactionCount, fetchUserTransactions, userAddress]);
 
     const getTransactionStatus = (transaction) => {
         if (transaction.executed) return "Executed";
@@ -72,6 +98,11 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
         if (transaction.releaseTime > new Date()) return "Pending";
         return "Ready for Execution";
     };
+
+    const refreshTransactions = useCallback(async () => {
+        await fetchTransactionCount();
+        await fetchUserTransactions();
+    }, [fetchTransactionCount, fetchUserTransactions]);
 
     const handleAction = async (action, transactionId) => {
         setLoading(true);
@@ -87,7 +118,15 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
                     tx = await timeLockContract.cancelTransaction(transactionId);
                     break;
                 case 'execute':
+                    const currentBlockTimestamp = await timeLockContract.getCurrentBlockTimestamp();
                     const transaction = await timeLockContract.transactions(transactionId);
+
+                    if (currentBlockTimestamp.lt(transaction.releaseTime)) {
+                        setError(`Transaction not yet ready. Current block time: ${new Date(currentBlockTimestamp * 1000).toLocaleString()}, Release time: ${new Date(transaction.releaseTime * 1000).toLocaleString()}`);
+                        setLoading(false);
+                        return;
+                    }
+
                     tx = await timeLockContract.executeTransaction(transactionId, { value: transaction.amount });
                     break;
                 case 'modify':
@@ -107,7 +146,7 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
             }
             await tx.wait();
             setSuccess(`Transaction ${action}d successfully`);
-            fetchUserTransactions();
+            await refreshTransactions();
         } catch (error) {
             console.error(`Error ${action}ing transaction:`, error);
             setError(`Failed to ${action} transaction. ${error.message}`);
@@ -169,8 +208,9 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (ETH)</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Release Time</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approvals</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Approvals</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Execute</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -194,17 +234,16 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.approvals}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button onClick={() => handleAction('approve', tx.id)} className="text-blue-600 hover:text-blue-900 mr-2" title="Approve">
-                                    <ThumbsUp size={16} />
-                                </button>
                                 <button onClick={() => handleAction('cancel', tx.id)} className="text-red-600 hover:text-red-900 mr-2" title="Cancel">
                                     <Trash2 size={16} />
                                 </button>
-                                <button onClick={() => handleAction('execute', tx.id)} className="text-green-600 hover:text-green-900 mr-2" title="Execute">
-                                    <PlayCircle size={16} />
-                                </button>
                                 <button onClick={() => { setSelectedTransaction(tx); setActiveTab('modify'); }} className="text-yellow-600 hover:text-yellow-900" title="Modify">
                                     <Edit size={16} />
+                                </button>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onClick={() => handleAction('execute', tx.id)} className="text-green-600 hover:text-green-900 mr-2" title="Execute">
+                                    <PlayCircle size={16} />
                                 </button>
                             </td>
                         </tr>
@@ -332,26 +371,36 @@ const TransactionManager = ({ timeLockContract, userAddress }) => {
     return (
         <div className="container mx-auto px-4 py-8">
             <h2 className="text-3xl font-bold mb-6">Transaction Manager</h2>
-            <div className="mb-4 flex flex-wrap gap-2">
-                <button
-                    className={`${activeTab === 'view' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
-                    onClick={() => setActiveTab('view')}
-                >
-                    View Transactions
-                </button>
-                <button
-                    className={`${activeTab === 'modify' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
-                    onClick={() => setActiveTab('modify')}
-                    disabled={!selectedTransaction}
-                >
-                    Modify Transaction
-                </button>
-                <button
-                    className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600"
-                    onClick={() => setShowApprovalModal(true)}
-                >
-                    Approve Transaction
-                </button>
+            <div className="mb-4 flex flex-wrap gap-2 justify-between">
+                <div>
+                    <button
+                        className={`${activeTab === 'view' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+                        onClick={() => setActiveTab('view')}
+                    >
+                        View Transactions
+                    </button>
+                    <button
+                        className={`${activeTab === 'modify' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded ml-2`}
+                        onClick={() => setActiveTab('modify')}
+                        disabled={!selectedTransaction}
+                    >
+                        Modify Transaction
+                    </button>
+                    <button
+                        className="bg-green-500 text-white font-bold py-2 px-4 rounded ml-2 hover:bg-green-600"
+                        onClick={refreshTransactions}
+                    >
+                        Refresh Transactions
+                    </button>
+                </div>
+                {isSignatory && (
+                    <button
+                        className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600"
+                        onClick={() => setShowApprovalModal(true)}
+                    >
+                        Approve Transaction
+                    </button>
+                )}
             </div>
             {loading && (
                 <div className="flex justify-center items-center py-4">

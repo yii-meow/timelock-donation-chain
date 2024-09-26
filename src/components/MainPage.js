@@ -99,6 +99,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
             const isActive = isUserRegistered ? await authManagerContract.isUserActive(selectedAddress) : true;
             const isAdmin = await authManagerContract.isAdmin(selectedAddress);
+            const isSignatory = await timeLockContract.isSignatory(selectedAddress);
 
             setUserState({
                 address: selectedAddress,
@@ -108,7 +109,8 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
                 isActive: isActive,
-                isAdmin: isAdmin
+                isAdmin: isAdmin,
+                isSignatory: isSignatory
             });
 
             if (isAdmin) {

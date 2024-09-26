@@ -65,9 +65,12 @@ const CharityDashboard = ({ userState, setUserState, onDisconnect }) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(userState.authManagerContract.address, userState.authManagerContract.interface, signer);
+            const timeLockContract = new ethers.Contract(userState.timeLockContract.address, userState.timeLockContract.interface, signer);
 
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
+            const isAdmin = await authManagerContract.isAdmin(selectedAddress);
+            const isSignatory = await timeLockContract.isSignatory(selectedAddress);
 
             setUserState({
                 address: selectedAddress,
@@ -75,6 +78,8 @@ const CharityDashboard = ({ userState, setUserState, onDisconnect }) => {
                 isConnected: true,
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
+                isAdmin: isAdmin,
+                isSignatory: isSignatory
             });
 
             if (!isCharityRegistered) {

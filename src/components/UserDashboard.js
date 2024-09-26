@@ -32,6 +32,7 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
 
     const selectAddress = async (selectedAddress) => {
         try {
+            console.log(selectedAddress)
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(userState.authManagerContract.address, userState.authManagerContract.interface, signer);
@@ -39,6 +40,8 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
 
             const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
             const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
+            const isAdmin = await authManagerContract.isAdmin(selectedAddress);
+            const isSignatory = await timeLockContract.isSignatory(selectedAddress);
 
             setUserState({
                 ...userState,
@@ -47,6 +50,8 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                 timeLockContract: timeLockContract,
                 isUser: isUserRegistered,
                 isCharity: isCharityRegistered,
+                isAdmin: isAdmin,
+                isSignatory: isSignatory
             });
 
             if (!isUserRegistered) {
@@ -77,8 +82,8 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`flex items-center py-2 px-4 rounded transition duration-300 ${activeTab === tab
-                                            ? 'bg-white text-blue-600'
-                                            : 'hover:bg-blue-700'
+                                        ? 'bg-white text-blue-600'
+                                        : 'hover:bg-blue-700'
                                         }`}
                                 >
                                     {icon}
@@ -126,6 +131,7 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
                         <TransactionManager
                             timeLockContract={userState.timeLockContract}
                             userAddress={userState.address}
+                            isSignatory={userState.isSignatory}
                         />
                     )}
                 </div>

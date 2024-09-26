@@ -11,7 +11,7 @@ const UserProfile = ({ userState, onStatusChange }) => {
 
     useEffect(() => {
         fetchUserProfile();
-    }, [userState.authManagerContract]);
+    }, [userState.authManagerContract, userState.address]);
 
     const fetchUserProfile = async () => {
         setIsLoading(true);

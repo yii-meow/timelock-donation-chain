@@ -503,5 +503,19 @@ export const COMBINED_TIMELOCK_ABI = [
         "stateMutability": "payable",
         "type": "function",
         "payable": true
+    },
+    {
+        "inputs": [],
+        "name": "getCurrentBlockTimestamp",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
     }
 ]

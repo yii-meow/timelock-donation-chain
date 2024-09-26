@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { Briefcase, Tag, Check, X, AlertTriangle, Search, LogOut, Filter } from 'lucide-react';
 
-const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => {
+const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect, setUserState, userState }) => {
     const [charities, setCharities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -12,10 +13,63 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
     const [sortOrder, setSortOrder] = useState('asc');
     const [categoryNames, setCategoryNames] = useState({});
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         fetchCharities();
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+        }
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            }
+        };
+    }, []);
+
+    const handleAccountsChanged = async (accounts) => {
+        if (accounts.length === 0) {
+            onDisconnect();
+        } else if (accounts[0] !== userState.address) {
+            await selectAddress(accounts[0]);
+        }
+    };
+
+    const selectAddress = async (selectedAddress) => {
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner(selectedAddress);
+            const authManagerContract = new ethers.Contract(userState.authManagerContract.address, userState.authManagerContract.interface, signer);
+            const timeLockContract = new ethers.Contract(userState.timeLockContract.address, userState.timeLockContract.interface, signer);
+
+            const isUserRegistered = await authManagerContract.isUserRegistered(selectedAddress);
+            const isCharityRegistered = await authManagerContract.isCharityRegistered(selectedAddress);
+            const isAdmin = await authManagerContract.isAdmin(selectedAddress);
+            const isSignatory = await timeLockContract.isSignatory(selectedAddress);
+
+            setUserState({
+                ...userState,
+                address: selectedAddress,
+                authManagerContract: authManagerContract,
+                timeLockContract: timeLockContract,
+                isUser: isUserRegistered,
+                isCharity: isCharityRegistered,
+                isAdmin: isAdmin,
+                isSignatory: isSignatory
+            });
+
+            if (!isAdmin) {
+                navigate('/');
+            }
+        } catch (error) {
+            console.error("An error occurred while selecting the address:", error);
+            onDisconnect();
+        }
+    };
 
     const fetchCategories = async () => {
         try {
@@ -76,7 +130,7 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
     };
 
     const filteredAndSortedCharities = charities
-        .filter(charity => 
+        .filter(charity =>
             charity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             charity.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -211,11 +265,10 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect }) => 
                                 </div>
                                 <button
                                     onClick={() => handleApproval(charity.address, !charity.isApproved)}
-                                    className={`w-full ${
-                                        charity.isApproved
-                                            ? 'bg-red-500 hover:bg-red-600'
-                                            : 'bg-green-500 hover:bg-green-600'
-                                    } text-white font-bold py-2 px-4 rounded transition duration-300`}
+                                    className={`w-full ${charity.isApproved
+                                        ? 'bg-red-500 hover:bg-red-600'
+                                        : 'bg-green-500 hover:bg-green-600'
+                                        } text-white font-bold py-2 px-4 rounded transition duration-300`}
                                 >
                                     {charity.isApproved ? 'Disapprove' : 'Approve'}
                                 </button>

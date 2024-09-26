@@ -322,4 +322,8 @@ contract CombinedTimeLock {
     }
 
     receive() external payable {}
+
+    function getCurrentBlockTimestamp() public view returns (uint256) {
+        return block.timestamp;
+    }
 }

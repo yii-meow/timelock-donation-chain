@@ -24,7 +24,7 @@ contract AuthManager {
 
     mapping(address => UserDetails) private users;
     mapping(address => CharityDetails) private charities;
-    address public admin;
+    address public immutable admin;
     address[] private allUsers;
     address[] private allCharities;
 
@@ -96,6 +96,8 @@ contract AuthManager {
     }
 
     function registerAsUser(string memory _name, string memory _email) public {
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_email).length > 0, "Email cannot be empty");
         require(!users[msg.sender].exists, "User already registered!");
         require(
             !charities[msg.sender].exists,
@@ -122,8 +124,12 @@ contract AuthManager {
         uint8 _category,
         string[] memory _tags
     ) public {
-        require(!charities[msg.sender].exists, "Charity already registered");
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_description).length > 0, "Description cannot be empty");
+        require(_walletAddress != address(0), "Invalid wallet address");
         require(_category < categories.length, "Invalid category");
+        require(_tags.length > 0, "At least one tag is required");
+        require(!charities[msg.sender].exists, "Charity already registered");
 
         charities[msg.sender] = CharityDetails({
             name: _name,
@@ -152,6 +158,9 @@ contract AuthManager {
         string memory _name,
         string memory _email
     ) public onlyRegisteredUser onlyActiveUser {
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_email).length > 0, "Email cannot be empty");
+
         UserDetails storage user = users[msg.sender];
         user.name = _name;
         user.email = _email;
@@ -165,7 +174,10 @@ contract AuthManager {
         uint8 _category,
         string[] memory _tags
     ) public onlyRegisteredCharity onlyActiveCharity {
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_description).length > 0, "Description cannot be empty");
         require(_category < categories.length, "Invalid category");
+        require(_tags.length > 0, "At least one tag is required");
 
         CharityDetails storage charity = charities[msg.sender];
         charity.name = _name;

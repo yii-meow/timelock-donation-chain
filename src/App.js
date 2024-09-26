@@ -14,7 +14,8 @@ function App() {
     isConnected: false,
     isUser: false,
     isCharity: false,
-    isAdmin: false
+    isAdmin: false,
+    isSignatory: false
   });
 
   const disconnectWallet = () => {
@@ -25,7 +26,8 @@ function App() {
       isConnected: false,
       isUser: false,
       isCharity: false,
-      isAdmin: false
+      isAdmin: false,
+      isSignatory: false
     });
   };
 
@@ -72,6 +74,8 @@ function App() {
               authManagerContract={userState.authManagerContract}
               adminAddress={userState.address}
               onDisconnect={disconnectWallet}
+              userState={userState}
+              setUserState={setUserState}
             />
           ) : (
             <Navigate to="/" replace />
