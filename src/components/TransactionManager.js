@@ -120,14 +120,10 @@ const TransactionManager = ({ timeLockContract, userAddress, isSignatory }) => {
                 case 'execute':
                     const currentBlockTimestamp = await timeLockContract.getCurrentBlockTimestamp();
                     const transaction = await timeLockContract.transactions(transactionId);
-
-                    if (currentBlockTimestamp.lt(transaction.releaseTime)) {
-                        setError(`Transaction not yet ready. Current block time: ${new Date(currentBlockTimestamp * 1000).toLocaleString()}, Release time: ${new Date(transaction.releaseTime * 1000).toLocaleString()}`);
-                        setLoading(false);
-                        return;
-                    }
-
                     tx = await timeLockContract.executeTransaction(transactionId, { value: transaction.amount });
+
+
+                    // tx = await timeLockContract.executeTransaction(transactionId, { value: transaction.amount });
                     break;
                 case 'modify':
                     if (!newBeneficiary || !newAmount || !newReleaseTime) {
