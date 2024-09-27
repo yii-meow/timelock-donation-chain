@@ -19,7 +19,6 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
     const [tags, setTags] = useState('');
 
     useEffect(() => {
-        // checkIfWalletIsConnected();
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', handleAccountsChanged);
         }
@@ -45,22 +44,6 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             navigate('/admin-dashboard');
         }
     }, [userState.isUser, userState.isCharity, userState.isAdmin, navigate]);
-
-    // const checkIfWalletIsConnected = async () => {
-    //     if (typeof window.ethereum !== 'undefined') {
-    //         try {
-    //             const provider = new ethers.providers.Web3Provider(window.ethereum);
-    //             const accounts = await provider.listAccounts();
-    //             if (accounts.length > 0) {
-    //                 await connectWallet();
-    //             }
-    //         } catch (error) {
-    //             setError("Failed to connect to the wallet. Please try again.");
-    //         }
-    //     } else {
-    //         setError("Please install MetaMask to use this application.");
-    //     }
-    // };
 
     const handleAccountsChanged = async (accounts) => {
         if (accounts.length === 0) {
@@ -156,6 +139,7 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
         e.preventDefault();
         if (!userState.authManagerContract) {
             console.error("AuthManager contract is not initialized");
+            setError("AuthManager contract is not initialized. Please try reconnecting your wallet.");
             return;
         }
 
@@ -184,11 +168,19 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
             }));
 
             setShowRegistrationForm(false);
-
+            setError('');
             // Navigation will be handled by the useEffect hook
         } catch (error) {
             console.error("An error occurred during registration:", error);
-            setError("Registration failed. Please try again.");
+            let errorMessage = "Registration failed. Please try again.";
+
+            if (error.data && error.data.data && error.data.data.reason) {
+                errorMessage += " " + error.data.data.reason;
+            } else if (error.message) {
+                errorMessage += " " + error.message;
+            }
+
+            setError(errorMessage);
         }
     };
 
@@ -269,6 +261,13 @@ const MainPage = ({ setUserState, userState, disconnectWallet }) => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center" id="registration-modal">
                         <div className="relative p-8 border w-full max-w-md m-4 shadow-lg rounded-lg bg-white">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6">Join DonationChain</h3>
+                            {/* Error Alert */}
+                            {error && (
+                                <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700" role="alert">
+                                    <p className="font-bold">Registration Error</p>
+                                    <p>{error}</p>
+                                </div>
+                            )}
                             <div className="mb-6">
                                 <button
                                     onClick={() => setRegistrationType('user')}

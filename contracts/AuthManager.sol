@@ -62,13 +62,6 @@ contract AuthManager {
     event UserReactivated(address indexed userAddress);
     event CharityReactivated(address indexed charityAddress);
 
-    error Unauthorized();
-    error InvalidInput();
-    error AlreadyRegistered();
-    error NotRegistered();
-    error AlreadyInUse();
-    error InvalidState();
-
     constructor() {
         admin = msg.sender;
         categories = [
@@ -84,27 +77,27 @@ contract AuthManager {
     }
 
     modifier onlyAdmin() {
-        if (msg.sender != admin) revert Unauthorized();
+        require(msg.sender == admin, "Unauthorized");
         _;
     }
 
     modifier onlyRegisteredUser() {
-        if (users[msg.sender].registrationDate == 0) revert NotRegistered();
+        require(users[msg.sender].registrationDate != 0, "Not registered");
         _;
     }
 
     modifier onlyRegisteredCharity() {
-        if (charities[msg.sender].registrationDate == 0) revert NotRegistered();
+        require(charities[msg.sender].registrationDate != 0, "Not registered");
         _;
     }
 
     modifier onlyActiveUser() {
-        if (!users[msg.sender].isActive) revert InvalidState();
+        require(users[msg.sender].isActive, "User is not active");
         _;
     }
 
     modifier onlyActiveCharity() {
-        if (!charities[msg.sender].isActive) revert InvalidState();
+        require(charities[msg.sender].isActive, "Charity is not active");
         _;
     }
 
@@ -112,18 +105,21 @@ contract AuthManager {
         string calldata _name,
         string calldata _email
     ) external {
-        if (
-            bytes(_name).length == 0 ||
-            bytes(_name).length > MAX_NAME_LENGTH ||
-            bytes(_email).length == 0 ||
-            bytes(_email).length > MAX_EMAIL_LENGTH ||
-            !isValidEmail(_email) ||
-            !isUniqueEmail(_email)
-        ) revert InvalidInput();
-        if (
-            users[msg.sender].registrationDate != 0 ||
-            charities[msg.sender].registrationDate != 0
-        ) revert AlreadyRegistered();
+        require(
+            bytes(_name).length > 0 &&
+                bytes(_name).length <= MAX_NAME_LENGTH &&
+                bytes(_email).length > 0 &&
+                bytes(_email).length <= MAX_EMAIL_LENGTH &&
+                isValidEmail(_email) &&
+                isUniqueEmail(_email),
+            "Invalid input"
+        );
+
+        require(
+            users[msg.sender].registrationDate == 0 &&
+                charities[msg.sender].registrationDate == 0,
+            "Already registered"
+        );
 
         users[msg.sender] = UserDetails({
             name: _name,
@@ -144,26 +140,26 @@ contract AuthManager {
         uint8 _category,
         string[] calldata _tags
     ) external {
-        if (
-            bytes(_name).length == 0 ||
-            bytes(_name).length > MAX_NAME_LENGTH ||
-            bytes(_description).length == 0 ||
-            bytes(_description).length > MAX_DESCRIPTION_LENGTH ||
-            _walletAddress == address(0) ||
-            _category >= categories.length ||
-            _tags.length == 0 ||
-            _tags.length > MAX_TAGS
-        ) revert InvalidInput();
-        if (charities[msg.sender].registrationDate != 0)
-            revert AlreadyRegistered();
-        if (!isUniqueCharityName(_name)) revert AlreadyInUse();
+        require(
+            bytes(_name).length > 0 &&
+                bytes(_name).length <= MAX_NAME_LENGTH &&
+                bytes(_description).length > 0 &&
+                bytes(_description).length <= MAX_DESCRIPTION_LENGTH &&
+                _walletAddress != address(0) &&
+                _category < categories.length &&
+                _tags.length > 0 &&
+                _tags.length <= MAX_TAGS,
+            "Invalid input"
+        );
+        require(
+            charities[msg.sender].registrationDate == 0,
+            "Already registered"
+        );
+        require(isUniqueCharityName(_name), "Charity name already in use");
 
         string[MAX_TAGS] memory tags;
         for (uint8 i = 0; i < _tags.length; i++) {
-            if (
-                bytes(_tags[i]).length == 0 ||
-                bytes(_tags[i]).length > MAX_TAG_LENGTH
-            ) revert InvalidInput();
+            require(bytes(_tags[i]).length <= MAX_TAG_LENGTH, "Tag too long");
             tags[i] = _tags[i];
         }
 
@@ -194,19 +190,21 @@ contract AuthManager {
         string calldata _name,
         string calldata _email
     ) external onlyRegisteredUser onlyActiveUser {
-        if (
-            bytes(_name).length == 0 ||
-            bytes(_name).length > MAX_NAME_LENGTH ||
-            bytes(_email).length == 0 ||
-            bytes(_email).length > MAX_EMAIL_LENGTH ||
-            !isValidEmail(_email)
-        ) revert InvalidInput();
+        require(
+            bytes(_name).length > 0 &&
+                bytes(_name).length <= MAX_NAME_LENGTH &&
+                bytes(_email).length > 0 &&
+                bytes(_email).length <= MAX_EMAIL_LENGTH &&
+                isValidEmail(_email),
+            "Invalid input"
+        );
 
-        if (
-            keccak256(bytes(_email)) !=
-            keccak256(bytes(users[msg.sender].email)) &&
-            !isUniqueEmail(_email)
-        ) revert AlreadyInUse();
+        require(
+            keccak256(bytes(_email)) ==
+                keccak256(bytes(users[msg.sender].email)) ||
+                isUniqueEmail(_email),
+            "Email already in use"
+        );
 
         users[msg.sender].name = _name;
         users[msg.sender].email = _email;
@@ -220,25 +218,22 @@ contract AuthManager {
         uint8 _category,
         string[] calldata _tags
     ) external onlyRegisteredCharity onlyActiveCharity {
-        if (
-            bytes(_name).length == 0 ||
-            bytes(_name).length > MAX_NAME_LENGTH ||
-            bytes(_description).length == 0 ||
-            bytes(_description).length > MAX_DESCRIPTION_LENGTH ||
-            _category >= categories.length ||
-            _tags.length == 0 ||
-            _tags.length > MAX_TAGS
-        ) revert InvalidInput();
+        require(
+            bytes(_name).length > 0 &&
+                bytes(_name).length <= MAX_NAME_LENGTH &&
+                bytes(_description).length > 0 &&
+                bytes(_description).length <= MAX_DESCRIPTION_LENGTH &&
+                _category < categories.length &&
+                _tags.length > 0 &&
+                _tags.length <= MAX_TAGS,
+            "Invalid input"
+        );
 
         CharityDetails storage charity = charities[msg.sender];
         charity.name = _name;
         charity.description = _description;
         charity.category = _category;
 
-        for (uint8 i = 0; i < _tags.length; i++) {
-            if (bytes(_tags[i]).length > MAX_TAG_LENGTH) revert InvalidInput();
-            charity.tags[i] = _tags[i];
-        }
         charity.tagCount = uint8(_tags.length);
 
         emit CharityUpdated(msg.sender, _name, _description, _category, _tags);
@@ -265,18 +260,22 @@ contract AuthManager {
     }
 
     function approveCharity(address _charityAddress) external onlyAdmin {
-        if (charities[_charityAddress].registrationDate == 0)
-            revert NotRegistered();
-        if (charities[_charityAddress].isApproved) revert InvalidState();
+        require(
+            charities[_charityAddress].registrationDate != 0,
+            "Not registered"
+        );
+        require(!charities[_charityAddress].isApproved, "Already approved");
 
         charities[_charityAddress].isApproved = true;
         emit CharityApproved(_charityAddress);
     }
 
     function disapproveCharity(address _charityAddress) external onlyAdmin {
-        if (charities[_charityAddress].registrationDate == 0)
-            revert NotRegistered();
-        if (!charities[_charityAddress].isApproved) revert InvalidState();
+        require(
+            charities[_charityAddress].registrationDate != 0,
+            "Not registered"
+        );
+        require(charities[_charityAddress].isApproved, "Not approved");
 
         charities[_charityAddress].isApproved = false;
         emit CharityDisapproved(_charityAddress);
@@ -313,8 +312,11 @@ contract AuthManager {
             string[] memory tags
         )
     {
-        if (charities[_charityAddress].registrationDate == 0)
-            revert NotRegistered();
+        require(
+            charities[_charityAddress].registrationDate != 0,
+            "Not registered"
+        );
+
         CharityDetails storage charity = charities[_charityAddress];
 
         string[] memory activeTags = new string[](charity.tagCount);
@@ -337,7 +339,7 @@ contract AuthManager {
     function getCategoryName(
         uint8 _categoryId
     ) external view returns (string memory) {
-        if (_categoryId >= categories.length) revert InvalidInput();
+        require(_categoryId < categories.length, "Invalid category ID");
         return categories[_categoryId];
     }
 
@@ -368,20 +370,22 @@ contract AuthManager {
     function getUserNameByAddress(
         address userAddress
     ) external view returns (string memory) {
-        if (users[userAddress].registrationDate == 0) revert NotRegistered();
+        require(users[userAddress].registrationDate != 0, "Not registered");
         return users[userAddress].name;
     }
 
     function isUserActive(address _userAddress) external view returns (bool) {
-        if (users[_userAddress].registrationDate == 0) revert NotRegistered();
+        require(users[_userAddress].registrationDate != 0, "Not registered");
         return users[_userAddress].isActive;
     }
 
     function isCharityActive(
         address _charityAddress
     ) external view returns (bool) {
-        if (charities[_charityAddress].registrationDate == 0)
-            revert NotRegistered();
+        require(
+            charities[_charityAddress].registrationDate != 0,
+            "Not registered"
+        );
         return charities[_charityAddress].isActive;
     }
 

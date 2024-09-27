@@ -160,8 +160,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -174,8 +173,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -188,8 +186,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -202,8 +199,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -216,8 +212,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -236,8 +231,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -250,8 +244,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -305,13 +298,11 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "stateMutability": "payable",
-        "type": "receive",
-        "payable": true
+        "type": "receive"
     },
     {
         "inputs": [
@@ -330,8 +321,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -380,8 +370,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -501,8 +490,7 @@ export const COMBINED_TIMELOCK_ABI = [
         "name": "executeTransaction",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function",
-        "payable": true
+        "type": "function"
     },
     {
         "inputs": [],
@@ -515,8 +503,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     },
     {
         "inputs": [
@@ -565,7 +552,6 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function",
-        "constant": true
+        "type": "function"
     }
 ]

@@ -32,7 +32,6 @@ const UserDashboard = ({ userState, setUserState, onDisconnect }) => {
 
     const selectAddress = async (selectedAddress) => {
         try {
-            console.log(selectedAddress)
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner(selectedAddress);
             const authManagerContract = new ethers.Contract(userState.authManagerContract.address, userState.authManagerContract.interface, signer);
