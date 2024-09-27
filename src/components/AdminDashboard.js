@@ -121,7 +121,17 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect, setUs
             } else {
                 await authManagerContract.disapproveCharity(charityAddress);
             }
-            await fetchCharities();
+
+            // Update the local state immediately after the contract call
+            setCharities(prevCharities =>
+                prevCharities.map(charity =>
+                    charity.address === charityAddress
+                        ? { ...charity, isApproved: approve }
+                        : charity
+                )
+            );
+
+            setLoading(false);
         } catch (error) {
             console.error(`Error ${approve ? 'approving' : 'disapproving'} charity:`, error);
             setError(`Failed to ${approve ? 'approve' : 'disapprove'} charity. Please try again.`);

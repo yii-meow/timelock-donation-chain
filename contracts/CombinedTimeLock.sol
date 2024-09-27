@@ -323,7 +323,54 @@ contract CombinedTimeLock {
 
     receive() external payable {}
 
+    // Yik Soon Part
     function getCurrentBlockTimestamp() public view returns (uint256) {
         return block.timestamp;
+    }
+
+    function getCharityTransactions(
+        address _charityAddress
+    )
+        external
+        view
+        returns (
+            uint256[] memory ids,
+            TransactionType[] memory types,
+            address[] memory creators,
+            uint256[] memory amounts,
+            uint256[] memory releaseTimes,
+            bool[] memory executed,
+            uint256[] memory approvals
+        )
+    {
+        uint256 count = 0;
+        for (uint256 i = 1; i <= transactionCount; i++) {
+            if (transactions[i].beneficiary == _charityAddress) {
+                count++;
+            }
+        }
+
+        ids = new uint256[](count);
+        types = new TransactionType[](count);
+        creators = new address[](count);
+        amounts = new uint256[](count);
+        releaseTimes = new uint256[](count);
+        executed = new bool[](count);
+        approvals = new uint256[](count);
+
+        uint256 index = 0;
+        for (uint256 i = 1; i <= transactionCount; i++) {
+            if (transactions[i].beneficiary == _charityAddress) {
+                Transaction storage txn = transactions[i];
+                ids[index] = i;
+                types[index] = txn.txType;
+                creators[index] = txn.creator;
+                amounts[index] = txn.amount;
+                releaseTimes[index] = txn.releaseTime;
+                executed[index] = txn.executed;
+                approvals[index] = txn.approvals;
+                index++;
+            }
+        }
     }
 }

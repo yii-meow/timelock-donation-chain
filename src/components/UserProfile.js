@@ -69,35 +69,18 @@ const UserProfile = ({ userState, onStatusChange }) => {
         }
     };
 
-    const handleDeactivate = async () => {
+    const handleToggleActivation = async () => {
         setIsLoading(true);
         setError('');
         try {
-            const tx = await userState.authManagerContract.deactivateUser();
+            const tx = await userState.authManagerContract.toggleUserActivation();
             await tx.wait();
             await fetchUserProfile();
-            onStatusChange(false);
-            alert("Your account has been deactivated.");
+            onStatusChange(!userProfile.isActive);
+            alert(userProfile.isActive ? "Your account has been deactivated." : "Your account has been reactivated.");
         } catch (error) {
-            console.error("Failed to deactivate user:", error);
-            setError("Failed to deactivate account. Please try again later.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleReactivate = async () => {
-        setIsLoading(true);
-        setError('');
-        try {
-            const tx = await userState.authManagerContract.reactivateUser();
-            await tx.wait();
-            await fetchUserProfile();
-            onStatusChange(true);
-            alert("Your account has been reactivated.");
-        } catch (error) {
-            console.error("Failed to reactivate user:", error);
-            setError("Failed to reactivate account. Please try again later.");
+            console.error("Failed to toggle user activation:", error);
+            setError("Failed to change account status. Please try again later.");
         } finally {
             setIsLoading(false);
         }
@@ -136,15 +119,9 @@ const UserProfile = ({ userState, onStatusChange }) => {
                 </div>
             </div>
             <div className="flex justify-end">
-                {userProfile.isActive ? (
-                    <button onClick={handleDeactivate} className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        <Shield className="mr-2" /> Deactivate Account
-                    </button>
-                ) : (
-                    <button onClick={handleReactivate} className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                        <Shield className="mr-2" /> Reactivate Account
-                    </button>
-                )}
+                <button onClick={handleToggleActivation} className={`flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${userProfile.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${userProfile.isActive ? 'red' : 'green'}-500`}>
+                    <Shield className="mr-2" /> {userProfile.isActive ? 'Deactivate Account' : 'Reactivate Account'}
+                </button>
             </div>
         </div>
     );

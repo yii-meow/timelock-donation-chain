@@ -129,6 +129,23 @@ const CharityProfile = ({ userState }) => {
         }
     };
 
+    const handleToggleActivation = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const tx = await userState.authManagerContract.toggleCharityActivation();
+            await tx.wait();
+            setCharityDetails(prev => ({ ...prev, isActive: !prev.isActive }));
+            alert(charityDetails.isActive ? "Your charity account has been deactivated." : "Your charity account has been reactivated.");
+            await fetchCharityDetails(); // Refresh the charity details
+        } catch (error) {
+            console.error("Failed to toggle charity activation:", error);
+            setError("Failed to change charity account status. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleDeactivate = async () => {
         setIsLoading(true);
         setError('');
@@ -307,20 +324,19 @@ const CharityProfile = ({ userState }) => {
                             {charityDetails.isActive ? 'Active' : 'Inactive'}
                         </p>
                     </div>
-                    <div className="flex justify-between pt-4 border-t">
-                        <button onClick={handleEditClick} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">
-                            Edit Profile
-                        </button>
-                        {charityDetails.isActive ? (
-                            <button onClick={handleDeactivate} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-300">
-                                Deactivate Account
+                    {!isEditing && (
+                        <div className="flex justify-between pt-4 border-t">
+                            <button onClick={handleEditClick} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">
+                                Edit Profile
                             </button>
-                        ) : (
-                            <button onClick={handleReactivate} className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300">
-                                Reactivate Account
+                            <button
+                                onClick={handleToggleActivation}
+                                className={`${charityDetails.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white px-4 py-2 rounded-md transition duration-300`}
+                            >
+                                {charityDetails.isActive ? 'Deactivate Account' : 'Reactivate Account'}
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

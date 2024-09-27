@@ -5,6 +5,36 @@ export const AUTH_MANAGER_ABI = [
         "type": "constructor"
     },
     {
+        "inputs": [],
+        "name": "AlreadyInUse",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "AlreadyRegistered",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidInput",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotRegistered",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Unauthorized",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -339,28 +369,14 @@ export const AUTH_MANAGER_ABI = [
     },
     {
         "inputs": [],
-        "name": "deactivateUser",
+        "name": "toggleUserActivation",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [],
-        "name": "deactivateCharity",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "reactivateUser",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "reactivateCharity",
+        "name": "toggleCharityActivation",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -610,6 +626,26 @@ export const AUTH_MANAGER_ABI = [
         "constant": true
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_charityAddress",
+                "type": "address"
+            }
+        ],
+        "name": "isCharityActive",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
         "inputs": [],
         "name": "getAllUsers",
         "outputs": [
@@ -651,6 +687,34 @@ export const AUTH_MANAGER_ABI = [
                 "internalType": "bool",
                 "name": "",
                 "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [],
+        "name": "getUserCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [],
+        "name": "getCharityCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",

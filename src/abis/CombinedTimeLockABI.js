@@ -517,5 +517,55 @@ export const COMBINED_TIMELOCK_ABI = [
         "stateMutability": "view",
         "type": "function",
         "constant": true
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_charityAddress",
+                "type": "address"
+            }
+        ],
+        "name": "getCharityTransactions",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "ids",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "enum CombinedTimeLock.TransactionType[]",
+                "name": "types",
+                "type": "uint8[]"
+            },
+            {
+                "internalType": "address[]",
+                "name": "creators",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "amounts",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "releaseTimes",
+                "type": "uint256[]"
+            },
+            {
+                "internalType": "bool[]",
+                "name": "executed",
+                "type": "bool[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "approvals",
+                "type": "uint256[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
     }
 ]
