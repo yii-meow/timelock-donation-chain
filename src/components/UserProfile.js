@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { User, Mail, Calendar, Shield, Edit, Save, X, DollarSign, Award, Clock, ChevronRight } from 'lucide-react';
 
 const UserProfile = ({ userState, onStatusChange }) => {
-    const [userProfile, setUserProfile] = useState({ name: '', email: '', registrationDate: '', isActive: true });
+    const [userProfile, setUserProfile] = useState({ address: '', name: '', email: '', registrationDate: '', isActive: true });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -23,6 +23,7 @@ const UserProfile = ({ userState, onStatusChange }) => {
             const profile = await userState.authManagerContract.getUserDetails();
             const registrationDate = new Date(profile.registrationDate.toNumber() * 1000);
             setUserProfile({
+                address: userState.address,
                 name: profile.name,
                 email: profile.email,
                 registrationDate: registrationDate,
@@ -95,7 +96,10 @@ const UserProfile = ({ userState, onStatusChange }) => {
                 </button>
             </div>
             <div className="space-y-3">
-                <div className="flex items-center">
+                <div>
+                    Wallet address: {userProfile.address}
+                </div>
+                <div className="flex items-center mt-3">
                     <User className="text-blue-500 mr-3" size={20} />
                     <p className="text-gray-600">Name:</p>
                     <p className="font-semibold ml-2">{userProfile.name}</p>
