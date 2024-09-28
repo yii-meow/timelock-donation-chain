@@ -116,11 +116,15 @@ const AdminDashboard = ({ authManagerContract, adminAddress, onDisconnect, setUs
     const handleApproval = async (charityAddress, approve) => {
         try {
             setLoading(true);
+            let transaction;
             if (approve) {
-                await authManagerContract.approveCharity(charityAddress);
+                transaction = await authManagerContract.approveCharity(charityAddress);
             } else {
-                await authManagerContract.disapproveCharity(charityAddress);
+                transaction = await authManagerContract.disapproveCharity(charityAddress);
             }
+
+            // Wait for the transaction to be mined
+            await transaction.wait();
 
             // Update the local state immediately after the contract call
             setCharities(prevCharities =>

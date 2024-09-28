@@ -49,6 +49,7 @@ contract CombinedTimeLock {
     );
     event TransactionExecuted(uint256 indexed transactionId);
     event TransactionCancelled(uint256 indexed transactionId);
+    event TransactionUpdated(uint256 num);
     event TransactionModified(
         uint256 indexed transactionId,
         address indexed newBeneficiary,
@@ -233,7 +234,11 @@ contract CombinedTimeLock {
 
         emit TransactionApproved(transactionId, msg.sender);
     }
+    function updateTransaction() external {
+        uint256 num = 1;
 
+        emit TransactionUpdated(num);
+    }
     // Modify a transaction (requires approval again after modification)
     function modifyTransaction(
         uint256 transactionId,
@@ -323,7 +328,6 @@ contract CombinedTimeLock {
 
     receive() external payable {}
 
-    // Yik Soon Part
     function getCurrentBlockTimestamp() public view returns (uint256) {
         return block.timestamp;
     }

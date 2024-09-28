@@ -139,6 +139,19 @@ export const COMBINED_TIMELOCK_ABI = [
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "num",
+                "type": "uint256"
+            }
+        ],
+        "name": "TransactionUpdated",
+        "type": "event"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -160,7 +173,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -173,7 +187,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -186,7 +201,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -199,7 +215,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -212,7 +229,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -231,7 +249,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -244,7 +263,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -298,11 +318,13 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "stateMutability": "payable",
-        "type": "receive"
+        "type": "receive",
+        "payable": true
     },
     {
         "inputs": [
@@ -321,7 +343,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -370,7 +393,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -439,6 +463,13 @@ export const COMBINED_TIMELOCK_ABI = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "updateTransaction",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -490,7 +521,8 @@ export const COMBINED_TIMELOCK_ABI = [
         "name": "executeTransaction",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
+        "type": "function",
+        "payable": true
     },
     {
         "inputs": [],
@@ -503,7 +535,8 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [
@@ -552,6 +585,7 @@ export const COMBINED_TIMELOCK_ABI = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     }
 ]

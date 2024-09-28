@@ -102,6 +102,7 @@ const TransactionManager = ({ timeLockContract, userAddress, isSignatory }) => {
     const refreshTransactions = useCallback(async () => {
         await fetchTransactionCount();
         await fetchUserTransactions();
+        await timeLockContract.updateTransaction();
     }, [fetchTransactionCount, fetchUserTransactions]);
 
     const handleAction = async (action, transactionId) => {
@@ -118,7 +119,6 @@ const TransactionManager = ({ timeLockContract, userAddress, isSignatory }) => {
                     tx = await timeLockContract.cancelTransaction(transactionId);
                     break;
                 case 'execute':
-                    const currentBlockTimestamp = await timeLockContract.getCurrentBlockTimestamp();
                     const transaction = await timeLockContract.transactions(transactionId);
                     tx = await timeLockContract.executeTransaction(transactionId, { value: transaction.amount });
 
