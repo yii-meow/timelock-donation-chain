@@ -25,14 +25,10 @@ REACT_APP_CHAT_ADDRESS=0X.......
 REACT_APP_COMBINED_TIMELOCK_ADDRESS=0X.......
 
 # Side Notes
-The first address of the Ganache will be the admin. 
+- By default, a donation transaction will need 1 approval, the first three Ganache addresses can be the approvals except the first one (admin), other addresses can be either donor or charity.
 
-By default, a donation transaction will need 1 approval, the first three Ganache addresses can be the approvals except the first one (admin), other addresses can be either donor or charity.
+- The first address in the Ganache network is the admin, admin can approve/disapprove a charity for accepting donations.
 
-The first address in the Ganache network is the admin, admin can approve / disapprove charity.
+- A donor can donate instantly or as scheduled and check the donation history.
 
-A donor can donate instantly or as scheduled and check the donation history.
-
-A charity can gain donations from the donors.
-
-An admin can approve or disapprove a charity for accepting donations.
+- A charity can gain donations from the donors.
