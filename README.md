@@ -13,7 +13,7 @@ In terminal, go to the root path of this project, and type these commands:
 <code>npm start</code>
 
 ## Edit env file
-Save these variable in .env file at root path after launching command <codetruffle migrate</code>, and check for the contract addresses from the terminal screen or Ganache project
+Save these variable in .env file at root path after launching command <code>truffle migrate</code>, and check for the contract addresses from the terminal screen or Ganache project
 
 1. Put your AuthManager contract address from Ganache as REACT_APP_AUTH_MANAGER_ADDRESS
 2. Put your ChatApp contract address from Ganache as REACT_APP_CHAT_ADDRESS
